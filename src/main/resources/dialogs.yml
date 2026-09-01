@@ -1,0 +1,378 @@
+# =====================================================
+#     HavocOrders - dialogs.yml  (1.21.6+ Dialog API)
+# =====================================================
+# Dialogs replace chest GUIs, so there are no MATERIAL or SLOT keys any more.
+# Each screen has a TITLE, some BODY lines, and BUTTONS with a LABEL and TOOLTIP.
+# TOOLTIP is a list; the lines are joined with newlines in the hover text.
+# Hex colours (&#f40d0d) and legacy codes (&7) both work.
+
+# Display names for the sort and filter cycles.
+NAMES:
+  SORT:
+    MOST-PAID: "Most Paid"
+    MOST-DELIVERED: "Most Delivered"
+    RECENTLY-LISTED: "Recently Listed"
+    MOST-MONEY-PER-ITEM: "Most Money Per Item"
+  FILTER:
+    ALL: "All"
+    BLOCKS: "Blocks"
+    TOOLS: "Tools"
+    FOOD: "Food"
+    COMBAT: "Combat"
+    POTIONS: "Potions"
+    BOOKS: "Books"
+    INGREDIENTS: "Ingredients"
+    UTILITIES: "Utilities"
+
+DIALOGS:
+
+  # ======================| ORDER BOARD |======================
+
+  ORDERS:
+    TITLE: "&#f40d0dᴏʀᴅᴇʀѕ"
+    # Overrides SETTINGS.DIALOG.COLUMNS for this screen.
+    COLUMNS: 3
+    BODY:
+      - "&7Page &f{page}&7/&f{pages} &8| &7{results} orders"
+      - "&7Sort &f{sort} &8| &7Filter &f{filter} &8| &7Search &f{query}"
+    EMPTY: "&7Nothing matches those filters."
+    BUTTONS:
+      ORDER:
+        LABEL: "&f{amount_left}x {material} &8- &#f40d0d${unit_price}"
+        TOOLTIP:
+          - "&#f40d0d{player}'s Order"
+          - "&f{material}"
+          - "&#f40d0d${unit_price} &feach"
+          - ""
+          - "&7{current}/{max} &8Delivered"
+          - "&7${paid}/${max_paid} &8Paid"
+          - "&7You are carrying &f{held}"
+          - ""
+          - "&8{expires} until it expires"
+      OWN-ORDER:
+        LABEL: "&#f40d0d{amount_left}x {material} &8- &7ʏᴏᴜʀѕ"
+        TOOLTIP:
+          - "&#f40d0dYour Order"
+          - "&f{material}"
+          - "&#f40d0d${unit_price} &feach"
+          - ""
+          - "&7{current}/{max} &8Delivered"
+          - "&7${paid}/${max_paid} &8Paid"
+          - "&7{collectable} &8waiting to collect"
+          - ""
+          - "&fClick to manage this order"
+          - "&8{expires} until it expires"
+      PREVIOUS:
+        LABEL: "&#f40d0d< ᴘʀᴇᴠɪᴏᴜѕ"
+        TOOLTIP: [ "&7Page {previous} of {pages}" ]
+      NEXT:
+        LABEL: "&#f40d0dɴᴇxᴛ >"
+        TOOLTIP: [ "&7Page {next} of {pages}" ]
+      SORT:
+        LABEL: "&#f40d0dѕᴏʀᴛ: &f{sort}"
+        TOOLTIP: [ "&7Click to cycle sorting" ]
+      FILTER:
+        LABEL: "&#f40d0dꜰɪʟᴛᴇʀ: &f{filter}"
+        TOOLTIP: [ "&7Click to cycle categories" ]
+      SEARCH:
+        LABEL: "&#f40d0dѕᴇᴀʀᴄʜ"
+        TOOLTIP:
+          - "&7Type privately - nobody sees this"
+          - "&7Currently: &f{query}"
+      MY-ORDERS:
+        LABEL: "&#f40d0dʏᴏᴜʀ ᴏʀᴅᴇʀѕ"
+        TOOLTIP: [ "&7Manage your orders and loot" ]
+      CLOSE:
+        LABEL: "&7ᴄʟᴏѕᴇ"
+        TOOLTIP: [ ]
+
+  # ======================| SEARCH |======================
+
+  SEARCH:
+    TITLE: "&#f40d0dѕᴇᴀʀᴄʜ"
+    BODY:
+      - "&7This box is private. Nothing is sent to chat."
+    INPUT-LABEL: "&fSearch"
+    BUTTONS:
+      CONFIRM:
+        LABEL: "&#f40d0dѕᴇᴀʀᴄʜ"
+        TOOLTIP: [ ]
+      CLEAR:
+        LABEL: "&7ᴄʟᴇᴀʀ"
+        TOOLTIP: [ "&7Remove the current search" ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  # ======================| DELIVER |======================
+
+  DELIVER:
+    TITLE: "&#f40d0dᴅᴇʟɪᴠᴇʀ &8-> &f{material}"
+    COLUMNS: 3
+    # One-click amounts. Buttons only appear when you can actually deliver that many.
+    # 64 = a stack, 576 = nine stacks, 1728 = a full shulker.
+    QUICK-AMOUNTS: [ 64, 576, 1728 ]
+    BODY:
+      - "&#f40d0d{player}'s Order"
+      - "&f{material} &8| &#f40d0d${unit_price} &feach"
+      - ""
+      - "{progress} &f{percent}%"
+      - "&7{current}&8/&7{max} delivered &8| &7{remaining} still wanted"
+      - "&7Order has paid out &#f40d0d${paid} &7of &#f40d0d${max_paid}"
+      - ""
+      - "&7In your inventory: &f{held_inventory}"
+      - "&7In your shulkers: &f{held_shulkers}"
+      - "&7You can deliver now: &#f40d0d{deliverable}"
+      - "&7That pays you: &#f40d0d${payout}"
+      - "&7Filling the order pays: &#f40d0d${full_payout}"
+      - ""
+      - "&8Amount accepts 1k, 2.5k, half or all."
+      - "&8{expires} until this order expires"
+    INPUT-LABEL: "&fAmount"
+    BUTTONS:
+      DELIVER:
+        LABEL: "&#f40d0dᴅᴇʟɪᴠᴇʀ"
+        TOOLTIP:
+          - "&7Deliver the amount typed above"
+          - "&7Blank or 'all' delivers &f{deliverable}"
+      DELIVER-ALL:
+        LABEL: "&#f40d0dᴅᴇʟɪᴠᴇʀ ᴀʟʟ &7({deliverable})"
+        TOOLTIP:
+          - "&7Deliver everything you are carrying,"
+          - "&7including inside your shulker boxes"
+          - "&7Pays &#f40d0d${payout}"
+      QUICK:
+        LABEL: "&#f40d0d+{amount}"
+        TOOLTIP:
+          - "&7Deliver &f{amount} {material}"
+          - "&7Pays &#f40d0d${value}"
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ ᴛᴏ ᴏʀᴅᴇʀѕ"
+        TOOLTIP: [ ]
+
+  # ======================| YOUR ORDERS |======================
+
+  MY-ORDERS:
+    TITLE: "&#f40d0dʏᴏᴜʀ ᴏʀᴅᴇʀѕ"
+    COLUMNS: 3
+    BODY:
+      - "&7{count} active &8| &7{collectable} items waiting"
+      - "&7Escrow held: &#f40d0d${escrow}"
+    EMPTY: "&7You have no orders yet."
+    BUTTONS:
+      ORDER:
+        LABEL: "&f{amount_left}x {material} &8- &7{current}/{max}"
+        TOOLTIP:
+          - "&f{material}"
+          - "&#f40d0d${unit_price} &feach"
+          - ""
+          - "&7{current}/{max} &8Delivered"
+          - "&7${paid}/${max_paid} &8Paid"
+          - "&7{collectable} &8waiting to collect"
+          - ""
+          - "&8{expires} until it expires"
+      NEW-ORDER:
+        LABEL: "&#f40d0d+ ɴᴇᴡ ᴏʀᴅᴇʀ"
+        TOOLTIP: [ "&7Create a buy order" ]
+      COLLECT:
+        LABEL: "&#f40d0dᴄᴏʟʟᴇᴄᴛ ʟᴏᴏᴛ &7({collectable})"
+        TOOLTIP: [ "&7Collect, drop or sell what was delivered" ]
+      ALERTS:
+        LABEL: "&#f40d0dᴀʟᴇʀᴛѕ: &f{alerts}"
+        TOOLTIP:
+          - "&7Tell you in chat when someone"
+          - "&7delivers to one of your orders"
+      PREVIOUS:
+        LABEL: "&#f40d0d< ᴘʀᴇᴠɪᴏᴜѕ"
+        TOOLTIP: [ ]
+      NEXT:
+        LABEL: "&#f40d0dɴᴇxᴛ >"
+        TOOLTIP: [ ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  # ======================| MANAGE ONE ORDER |======================
+
+  MANAGE-ORDER:
+    TITLE: "&#f40d0dᴍᴀɴᴀɢᴇ ᴏʀᴅᴇʀ"
+    BODY:
+      - "&f{material}"
+      - "&#f40d0d${unit_price} &feach"
+      - ""
+      - "&7{current}/{max} &8Delivered"
+      - "&7${paid}/${max_paid} &8Paid"
+      - "&7{collectable} &8waiting to collect"
+      - "&7Refund if cancelled: &#f40d0d${refund}"
+      - ""
+      - "&8{expires} until it expires"
+    BUTTONS:
+      COLLECT:
+        LABEL: "&#f40d0dᴄᴏʟʟᴇᴄᴛ"
+        TOOLTIP: [ "&7Open your loot" ]
+      CANCEL-ORDER:
+        LABEL: "&#f40d0dᴄᴀɴᴄᴇʟ ᴏʀᴅᴇʀ"
+        TOOLTIP: [ "&7Refunds &#f40d0d${refund}" ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  CANCEL-CONFIRM:
+    TITLE: "&#f40d0dᴄᴀɴᴄᴇʟ ᴏʀᴅᴇʀ?"
+    BODY:
+      - "&fCancel your order for &#f40d0d{max} {material}&f?"
+      - "&7You get &#f40d0d${refund} &7back."
+    BUTTONS:
+      CONFIRM:
+        LABEL: "&#f40d0dᴄᴏɴꜰɪʀᴍ"
+        TOOLTIP: [ ]
+      BACK:
+        LABEL: "&7ɴᴇᴠᴇʀᴍɪɴᴅ"
+        TOOLTIP: [ ]
+
+  # ======================| NEW ORDER |======================
+
+  NEW-ORDER:
+    TITLE: "&#f40d0dɴᴇᴡ ᴏʀᴅᴇʀ"
+    BODY:
+      - "&7Item: &f{material}"
+      - "&7Total cost: &#f40d0d${total}"
+      - "&7Balance: &#f40d0d${balance}"
+      - ""
+      - "&8Amounts accept 1k, 2.5k, 1m and so on."
+    AMOUNT-LABEL: "&fAmount &7(e.g. 1k)"
+    PRICE-LABEL: "&fPrice each &7(e.g. 2.5k)"
+    BUTTONS:
+      CHOOSE-ITEM:
+        LABEL: "&#f40d0dᴄʜᴏᴏѕᴇ ɪᴛᴇᴍ &7({material})"
+        TOOLTIP: [ "&7Pick what you want to buy" ]
+      HELD-ITEM:
+        LABEL: "&#f40d0dᴜѕᴇ ʜᴇʟᴅ ɪᴛᴇᴍ"
+        TOOLTIP: [ "&7Use whatever is in your hand" ]
+      CONFIRM:
+        LABEL: "&#f40d0dᴄᴏɴꜰɪʀᴍ"
+        TOOLTIP: [ "&7Place the order" ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  # ======================| ITEM PICKER |======================
+
+  ITEM-PICKER:
+    TITLE: "&#f40d0dᴄʜᴏᴏѕᴇ ɪᴛᴇᴍ"
+    COLUMNS: 3
+    BODY:
+      - "&7Page &f{page}&7/&f{pages} &8| &7{results} items"
+      - "&7Filter &f{filter} &8| &7Search &f{query}"
+    EMPTY: "&7No items match that search."
+    BUTTONS:
+      ITEM:
+        LABEL: "&f{name}"
+        TOOLTIP: [ "&7Click to select" ]
+      PREVIOUS:
+        LABEL: "&#f40d0d< ᴘʀᴇᴠɪᴏᴜѕ"
+        TOOLTIP: [ ]
+      NEXT:
+        LABEL: "&#f40d0dɴᴇxᴛ >"
+        TOOLTIP: [ ]
+      FILTER:
+        LABEL: "&#f40d0dꜰɪʟᴛᴇʀ: &f{filter}"
+        TOOLTIP: [ ]
+      SEARCH:
+        LABEL: "&#f40d0dѕᴇᴀʀᴄʜ"
+        TOOLTIP: [ "&7Private - not sent to chat" ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  ENCHANT-PICKER:
+    TITLE: "&#f40d0dᴄʜᴏᴏѕᴇ ᴇɴᴄʜᴀɴᴛᴍᴇɴᴛ"
+    COLUMNS: 3
+    BODY:
+      - "&7Page &f{page}&7/&f{pages}"
+    BUTTONS:
+      ENCHANT:
+        LABEL: "&f{enchantment} {level}"
+        TOOLTIP: [ "&7Click to select" ]
+      PREVIOUS:
+        LABEL: "&#f40d0d< ᴘʀᴇᴠɪᴏᴜѕ"
+        TOOLTIP: [ ]
+      NEXT:
+        LABEL: "&#f40d0dɴᴇxᴛ >"
+        TOOLTIP: [ ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  # ======================| COLLECT / SELL |======================
+
+  COLLECT:
+    TITLE: "&#f40d0dᴄᴏʟʟᴇᴄᴛ"
+    COLUMNS: 3
+    BODY:
+      - "&7Page &f{page}&7/&f{pages} &8| &7{total_items} items waiting"
+      - "&7Sell value: &#f40d0d${sell_total} &8({unsellable} unsellable)"
+      - ""
+      - "&8Drop buttons drop at your feet, spread over a few ticks."
+    EMPTY: "&7Nothing waiting for you right now."
+    BUTTONS:
+      LOOT:
+        LABEL: "&f{amount}x {material}"
+        TOOLTIP:
+          - "&7From your order for &f{max} {material}"
+          - "&7Sell value: &#f40d0d${value}"
+          - ""
+          - "&fClick to collect as much as fits"
+          - "&8Anything left over stays here."
+      COLLECT-ALL:
+        LABEL: "&#f40d0dᴄᴏʟʟᴇᴄᴛ ᴀʟʟ"
+        TOOLTIP: [ "&7Takes everything that fits in your inventory" ]
+      DROP-PAGE:
+        LABEL: "&#f40d0dᴅʀᴏᴘ ᴘᴀɢᴇ"
+        TOOLTIP: [ "&7Drops the {per_page} entries on this page" ]
+      DROP-PAGES:
+        LABEL: "&#f40d0dᴅʀᴏᴘ {pages_batch} ᴘᴀɢᴇѕ"
+        TOOLTIP: [ "&7Drops the next {pages_batch} pages from here" ]
+      DROP-ALL:
+        LABEL: "&#f40d0dᴅʀᴏᴘ ᴀʟʟ &7({total_items})"
+        TOOLTIP:
+          - "&7Drops everything at your feet"
+          - "&cMake sure you have room."
+      SELL-ALL:
+        LABEL: "&#f40d0dѕᴇʟʟ ᴀʟʟ &7(${sell_total})"
+        TOOLTIP: [ "&7Sell every sellable item" ]
+      PREVIOUS:
+        LABEL: "&#f40d0d< ᴘʀᴇᴠɪᴏᴜѕ"
+        TOOLTIP: [ ]
+      NEXT:
+        LABEL: "&#f40d0dɴᴇxᴛ >"
+        TOOLTIP: [ ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  SELL-CONFIRM:
+    TITLE: "&#f40d0dѕᴇʟʟ ᴇᴠᴇʀʏᴛʜɪɴɢ?"
+    BODY:
+      - "&fSell &#f40d0d{amount} &fitems for &#f40d0d${total}&f?"
+      - "&7{unsellable} items have no sell price and stay put."
+    BUTTONS:
+      CONFIRM:
+        LABEL: "&#f40d0dѕᴇʟʟ"
+        TOOLTIP: [ ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  DROP-CONFIRM:
+    TITLE: "&#f40d0dᴅʀᴏᴘ ᴇᴠᴇʀʏᴛʜɪɴɢ?"
+    BODY:
+      - "&fDrop &#f40d0d{amount} &fitems on the ground?"
+      - "&cThey are not protected. Anyone nearby can pick them up."
+    BUTTONS:
+      CONFIRM:
+        LABEL: "&#f40d0dᴅʀᴏᴘ"
+        TOOLTIP: [ ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
