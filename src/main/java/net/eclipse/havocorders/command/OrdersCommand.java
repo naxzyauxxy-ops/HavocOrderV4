@@ -80,6 +80,15 @@ public class OrdersCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        // Typing into a dialog field is unreliable on Bedrock, so searching also has a
+        // plain command form that works everywhere.
+        if (args.length > 0 && args[0].equalsIgnoreCase("search")) {
+            String query = args.length > 1
+                    ? String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length))
+                    : "";
+            plugin.sessions().get(player).setQuery(query);
+        }
+
         new OrdersScreen(plugin, player).show();
         return true;
     }
@@ -88,6 +97,9 @@ public class OrdersCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                       @NotNull String alias, @NotNull String[] args) {
         List<String> options = new ArrayList<>();
+        if (args.length == 1) {
+            options.add("search");
+        }
         if (args.length == 1 && sender.hasPermission("havocorders.admin")) {
             options.add("reload");
             options.add("import");

@@ -90,7 +90,7 @@ public class OrdersScreen extends Screen {
 
     @Override
     protected ActionButton exitButton() {
-        return Dialogs.closeButton(button("CLOSE"), screenPlaceholders(results()), width());
+        return Dialogs.closeButton(button("CLOSE"), screenPlaceholders(results()), width(), style());
     }
 
     @Override

@@ -7,6 +7,7 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import net.eclipse.havocorders.HavocOrders;
 import net.eclipse.havocorders.manager.Session;
+import net.eclipse.havocorders.util.Bedrock;
 import net.eclipse.havocorders.util.Text;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Sound;
@@ -87,9 +88,21 @@ public abstract class Screen {
         return section == null ? List.of() : section.getStringList(key);
     }
 
+    /** Rendering rules for whoever is looking at this screen. */
+    protected Dialogs.Style style() {
+        if (!Bedrock.isBedrock(player)) return Dialogs.Style.JAVA;
+        return new Dialogs.Style(
+                plugin.getConfig().getBoolean("BEDROCK.ASCII-LABELS", true),
+                plugin.getConfig().getBoolean("BEDROCK.INLINE-TOOLTIPS", true));
+    }
+
+    protected boolean isBedrock() {
+        return Bedrock.isBedrock(player);
+    }
+
     protected ActionButton configButton(String key, Map<String, String> placeholders,
                                         DialogActionCallback callback) {
-        return Dialogs.fromConfig(button(key), placeholders, width(), callback);
+        return Dialogs.fromConfig(button(key), placeholders, width(), callback, style());
     }
 
     /** Footer button that just navigates somewhere else. */
@@ -102,7 +115,7 @@ public abstract class Screen {
     }
 
     protected Component titleFrom(Map<String, String> placeholders) {
-        return Text.component(Text.apply(string("TITLE", "Orders"), placeholders));
+        return Text.component(style().text(Text.apply(string("TITLE", "Menu"), placeholders)));
     }
 
     public void show() {

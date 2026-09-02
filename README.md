@@ -54,6 +54,44 @@ Display abbreviates the same way (`1.23m`). Turn that off with
 Search matches the real item type, not a custom display name, so a renamed item cannot
 surface under a type it is not. Seller names remain searchable.
 
+## Java and Bedrock
+
+Geyser translates these dialogs into Bedrock forms, so Bedrock players get the real UI
+rather than a fallback. Two things do not survive that translation, and both are handled:
+
+**Text fields can come back empty.** This is a confirmed Geyser bug
+([GeyserMC/Geyser#6377](https://github.com/GeyserMC/Geyser/issues/6377)): `getText` returns
+`""` on Bedrock while working on Java. Every field here now has a safe default instead of a
+dead end:
+
+| Field | Blank input does |
+| --- | --- |
+| Deliver amount | Delivers everything you can |
+| Order amount / price | Keeps the current value |
+| Auction price | Keeps the price already set, else points at `/ah sell <price>` |
+| Search | Keeps the previous search, and tells Bedrock players the command form |
+
+Nothing is reachable only by typing into a dialog. `/orders search <text>`,
+`/ah search <text>` and `/ah sell <price>` all work from Bedrock chat, and the quick-amount
+buttons on the deliver screen cover the common cases with no typing at all.
+
+**Buttons have no hover text on Bedrock**, so tooltips are invisible there — which would
+have hidden things that matter, like the renamed-item warning and durability. For Bedrock
+players the tooltip is folded into the button label instead.
+
+Bedrock's font also lacks the small-caps glyphs the configs use (`ᴏʀᴅᴇʀѕ`), so those are
+rewritten to plain ASCII for those players only.
+
+```yaml
+BEDROCK:
+  ASCII-LABELS: true
+  INLINE-TOOLTIPS: true
+```
+
+Detection goes through Floodgate by reflection — no compile-time dependency, and a server
+without Floodgate simply treats everyone as Java. Java players see no difference either
+way; both adaptations are per-viewer.
+
 ## Search privacy
 
 Search uses the dialog's own text field. The value goes straight from your client to the

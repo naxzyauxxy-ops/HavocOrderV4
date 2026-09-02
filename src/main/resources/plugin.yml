@@ -8,7 +8,7 @@ softdepend: [Vault, PlaceholderAPI]
 commands:
   orders:
     description: Open the orders menu
-    usage: /orders [reload]
+    usage: /orders [search <text>|reload|import]
     aliases: [order, havocorders]
   toggleorderalerts:
     description: Toggle order delivery notifications

@@ -162,8 +162,20 @@ PLACEHOLDERS:
   # ENABLED-TEXT: "\u00a7aON"
   # DISABLED-TEXT: "\u00a7cOFF"
 
+# Bedrock (Geyser/Floodgate) compatibility.
+# Geyser turns these dialogs into Bedrock forms, which works, but two things do not carry
+# over: the small-caps glyphs in dialogs.yml are not in Bedrock's font, and form buttons
+# have no hover text. Both are handled per-player, so Java players are unaffected.
+# Detection needs Floodgate; without it everyone is treated as Java.
+BEDROCK:
+  # Rewrite small-caps and box glyphs to plain ASCII for Bedrock players.
+  ASCII-LABELS: true
+  # Fold button tooltips into the button label, since Bedrock cannot show them.
+  INLINE-TOOLTIPS: true
+
 MESSAGES:
   PREFIX: ""
+  SEARCH-USE-COMMAND: "&#f40d0dSearch box came back empty. Try &f/orders search <text>&#f40d0d instead."
   NO-PERMISSION: "&#f40d0dYou don't have permission to do that."
   PLAYERS-ONLY: "&#f40d0dThis command can only be used by players."
   RELOADED: "&#f40d0dConfiguration reloaded."

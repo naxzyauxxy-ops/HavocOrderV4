@@ -130,7 +130,12 @@ public class DeliverScreen extends Screen {
                 return;
             }
             int max = deliverable(current);
-            Integer amount = NumberUtil.parseAmount(view.getText(KEY), max);
+            String typed = view.getText(KEY);
+            // Bedrock text fields can come back empty through Geyser, so a blank box
+            // means "everything I can" rather than an error the player cannot escape.
+            Integer amount = typed == null || typed.isBlank()
+                    ? max
+                    : NumberUtil.parseAmount(typed, max);
             if (amount == null || amount <= 0) {
                 deny();
                 tell(plugin.message("INVALID-AMOUNT"));

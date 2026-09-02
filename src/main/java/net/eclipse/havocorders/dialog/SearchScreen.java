@@ -69,7 +69,14 @@ public class SearchScreen extends Screen {
                 configButton("CONFIRM", Map.of(), (view, audience) -> {
                     String value = view.getText(KEY);
                     click();
-                    onSubmit.accept(value == null ? "" : value.trim());
+                    if (value == null || value.isBlank()) {
+                        // Geyser can hand back an empty field; clearing the search
+                        // silently would look like the button did nothing.
+                        if (isBedrock()) tell(plugin.message("SEARCH-USE-COMMAND"));
+                        onSubmit.accept(initial);
+                        return;
+                    }
+                    onSubmit.accept(value.trim());
                 }),
                 configButton("CLEAR", Map.of(), (view, audience) -> {
                     click();

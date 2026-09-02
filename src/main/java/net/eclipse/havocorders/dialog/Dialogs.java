@@ -12,6 +12,7 @@ import net.eclipse.havocorders.util.Text;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import org.bukkit.inventory.ItemStack;
+import net.eclipse.havocorders.util.Bedrock;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.time.Duration;
@@ -69,14 +70,36 @@ public final class Dialogs {
     /** A button with no action, which simply closes the dialog. */
     public static ActionButton closeButton(ConfigurationSection section,
                                            Map<String, String> placeholders,
-                                           int width) {
+                                           int width,
+                                           Style style) {
         String label = section == null ? "&7Close" : section.getString("LABEL", "&7Close");
         List<String> tooltip = section == null ? List.of() : section.getStringList("TOOLTIP");
         Component tooltipComponent = tooltip.isEmpty()
                 ? null
                 : Text.multiline(Text.apply(tooltip, placeholders));
-        return ActionButton.create(Text.component(Text.apply(label, placeholders)),
+        return ActionButton.create(Text.component(style.text(Text.apply(label, placeholders))),
                 tooltipComponent, width, null);
+    }
+
+    /**
+     * How text is rendered for one viewer. Bedrock forms cannot draw the small-caps
+     * glyphs the configs use and do not render button tooltips at all, so for those
+     * players labels are transliterated and the tooltip is folded into the label.
+     */
+    public record Style(boolean ascii, boolean inlineTooltip) {
+
+        public static final Style JAVA = new Style(false, false);
+
+        public String text(String input) {
+            return ascii ? Bedrock.ascii(input) : input;
+        }
+
+        public List<String> text(List<String> input) {
+            if (!ascii) return input;
+            List<String> out = new ArrayList<>(input.size());
+            for (String line : input) out.add(Bedrock.ascii(line));
+            return out;
+        }
     }
 
     // ------------------------------------------------------------------ config helpers
@@ -85,13 +108,22 @@ public final class Dialogs {
     public static ActionButton fromConfig(ConfigurationSection section,
                                           Map<String, String> placeholders,
                                           int width,
-                                          DialogActionCallback callback) {
+                                          DialogActionCallback callback,
+                                          Style style) {
         String label = section == null ? "Button" : section.getString("LABEL", "Button");
         List<String> tooltip = section == null ? List.of() : section.getStringList("TOOLTIP");
-        Component tooltipComponent = tooltip.isEmpty()
-                ? null
-                : Text.multiline(Text.apply(tooltip, placeholders));
-        return button(Text.component(Text.apply(label, placeholders)), tooltipComponent, width, callback);
+
+        String resolvedLabel = style.text(Text.apply(label, placeholders));
+        List<String> resolvedTooltip = style.text(Text.apply(tooltip, placeholders));
+
+        if (style.inlineTooltip() && !resolvedTooltip.isEmpty()) {
+            // Bedrock form buttons show no hover text, so detail has to move inline
+            // or it is invisible to those players.
+            resolvedLabel = resolvedLabel + "\n" + String.join("\n", resolvedTooltip);
+        }
+
+        Component tooltipComponent = resolvedTooltip.isEmpty() ? null : Text.multiline(resolvedTooltip);
+        return button(Text.component(resolvedLabel), tooltipComponent, width, callback);
     }
 
     /**
@@ -108,9 +140,13 @@ public final class Dialogs {
 
     /** Turns a BODY list from config into plain-message body entries. */
     public static List<DialogBody> body(List<String> lines, Map<String, String> placeholders) {
+        return body(lines, placeholders, Style.JAVA);
+    }
+
+    public static List<DialogBody> body(List<String> lines, Map<String, String> placeholders, Style style) {
         List<DialogBody> body = new ArrayList<>();
         if (lines == null) return body;
-        for (String line : Text.apply(lines, placeholders)) {
+        for (String line : style.text(Text.apply(lines, placeholders))) {
             body.add(DialogBody.plainMessage(Text.component(line)));
         }
         return body;

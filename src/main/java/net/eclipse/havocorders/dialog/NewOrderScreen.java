@@ -38,7 +38,11 @@ public class NewOrderScreen extends Screen {
         return "NEW-ORDER";
     }
 
-    /** Pulls the typed values into the session so they are not lost on navigation. */
+    /**
+     * Pulls the typed values into the session so they are not lost on navigation.
+     * A blank or unreadable field keeps the previous value, which is what makes this
+     * survive Geyser handing back empty text on Bedrock.
+     */
     private void capture(DialogResponseView view) {
         Integer amount = NumberUtil.parseAmount(view.getText(AMOUNT), session.getDraftAmount());
         if (amount != null && amount > 0) session.setDraftAmount(amount);
