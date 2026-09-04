@@ -67,6 +67,15 @@ public abstract class Screen {
         return Math.max(1, Math.min(1024, width));
     }
 
+    /** Placeholders every screen gets, whatever else it adds. */
+    protected Map<String, String> common(Map<String, String> placeholders) {
+        Map<String, String> merged = new java.util.HashMap<>(placeholders);
+        merged.putIfAbsent("separator",
+                plugin.line("SEPARATOR", "&8&m                                                  "));
+        merged.putIfAbsent("player", player.getName());
+        return merged;
+    }
+
     protected ConfigurationSection section() {
         return plugin.dialogSection(configPath());
     }

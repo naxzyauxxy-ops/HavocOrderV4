@@ -32,6 +32,15 @@ SETTINGS:
   ESCROW: true
   CURRENCY-SYMBOL: "$"
   SAVE-INTERVAL-SECONDS: 30
+  # Re-read config.yml and dialogs.yml when they change on disk, so edits apply without
+  # a restart. 0 disables the watcher. Note this reloads settings and menu text only -
+  # it does not touch orders, listings or money.
+  RELOAD-WATCH-SECONDS: 5
+  # On startup, add any settings a plugin update introduced into your existing
+  # config.yml and dialogs.yml. Your values are never changed and nothing is removed;
+  # the previous file is kept as config.yml.bak. Turn off only if you manage the files
+  # yourself and would rather paste new keys in by hand.
+  AUTO-UPDATE-CONFIG: true
   EXPIRY-CHECK-SECONDS: 60
   # Show 1.23m instead of 1,230,000. Input always accepts both forms.
   ABBREVIATE-NUMBERS: true
@@ -47,9 +56,9 @@ SETTINGS:
     ITEM-SIZE: 48
   # Buttons shown per page in the paginated dialogs. Dialogs scroll, so these can
   # be far higher than a chest GUI allowed.
-  ORDERS-PER-PAGE: 21
-  ITEMS-PER-PAGE: 27
-  COLLECT-PER-PAGE: 15
+  ORDERS-PER-PAGE: 10
+  ITEMS-PER-PAGE: 14
+  COLLECT-PER-PAGE: 10
   SHULKERS:
     # Count and pull items out of shulker boxes the player is carrying.
     DELIVER-FROM-SHULKERS: true

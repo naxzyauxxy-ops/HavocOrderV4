@@ -7,6 +7,9 @@
 # Hex colours (&#f40d0d) and legacy codes (&7) both work.
 
 # Display names for the sort and filter cycles.
+LINES:
+  SEPARATOR: "&8&m                                                  "
+
 NAMES:
   SORT:
     MOST-PAID: "Most Paid"
@@ -31,14 +34,15 @@ DIALOGS:
   ORDERS:
     TITLE: "&#f40d0dᴏʀᴅᴇʀѕ"
     # Overrides SETTINGS.DIALOG.COLUMNS for this screen.
-    COLUMNS: 3
+    COLUMNS: 2
     BODY:
-      - "&7Page &f{page}&7/&f{pages} &8| &7{results} orders"
-      - "&7Sort &f{sort} &8| &7Filter &f{filter} &8| &7Search &f{query}"
+      - "&7{results} orders &8\u00b7 &7page &f{page}&8/&f{pages}"
+      - "&8Sort: &7{sort}   &8Filter: &7{filter}   &8Search: &7{query}"
+      - "{separator}"
     EMPTY: "&7Nothing matches those filters."
     BUTTONS:
       ORDER:
-        LABEL: "&f{amount_left}x {material} &8- &#f40d0d${unit_price}"
+        LABEL: "&f{amount_left}\u00d7 {material}\n&a${unit_price} each &8\u00b7 &7you have {held}"
         TOOLTIP:
           - "&#f40d0d{player}'s Order"
           - "&f{material}"
@@ -50,7 +54,7 @@ DIALOGS:
           - ""
           - "&8{expires} until it expires"
       OWN-ORDER:
-        LABEL: "&#f40d0d{amount_left}x {material} &8- &7ʏᴏᴜʀѕ"
+        LABEL: "&7{amount_left}\u00d7 {material}\n&8yours \u00b7 &7{current}/{max} delivered"
         TOOLTIP:
           - "&#f40d0dYour Order"
           - "&f{material}"

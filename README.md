@@ -301,6 +301,52 @@ remainder falls where you were standing instead of vanishing.
 Because collect entries are per order rather than per stack, the page buttons only matter
 if you have more waiting orders than `COLLECT-PER-PAGE`.
 
+## Durability of data, and why writes are immediate
+
+Anything that hands a player an item or moves money is written to the database straight
+away, not on the periodic timer. The timer still exists for low-risk updates, and bursts
+are collapsed into a single batch, but the window between "player has the item" and
+"database knows" is now milliseconds rather than up to 30 seconds.
+
+That gap was a real duplication bug: on a crash, `kill`, or a plugin-manager unload, the
+unwritten records came back on restart while the player already had the goods.
+
+`SAVE-INTERVAL-SECONDS` is now only a safety net. Lowering it is no longer how you protect
+against duplication.
+
+## Startup and load order
+
+The plugin no longer disables itself when Vault has no economy provider yet. Economy
+plugins register their Vault service during their own enable, so load order alone could
+leave this plugin dead until it was reloaded by hand. It now waits, retrying once a second
+for a minute, and logs when it hooks in. Commands report the missing economy until then.
+
+## Live config reloading
+
+`config.yml` and `dialogs.yml` are re-read when their timestamps change, so edits apply
+without a restart or a reload command:
+
+```yaml
+RELOAD-WATCH-SECONDS: 5   # 0 disables
+```
+
+This covers settings and menu text only. It does not touch orders, listings or money, and
+it is unrelated to duplication.
+
+## Updating
+
+New settings from a plugin update are written into your existing `config.yml` and
+`dialogs.yml` on startup. Your values are never changed, nothing is removed, and the
+previous file is saved as `config.yml.bak`. The console lists every key it added.
+
+```yaml
+AUTO-UPDATE-CONFIG: true   # set false to manage the files yourself
+```
+
+Two things it deliberately does not do: it will not change a value you have already set,
+and it will not delete keys it does not recognise, since those are assumed to be yours.
+So a *new* setting appears by itself, but a *changed default* is still yours to apply.
+
 ## Performance
 
 - The full order set lives in memory; nothing queries the database during play.

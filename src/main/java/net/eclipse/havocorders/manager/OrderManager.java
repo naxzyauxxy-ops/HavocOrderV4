@@ -49,6 +49,10 @@ public class OrderManager {
 
     private final AtomicLong version = new AtomicLong();
 
+    /** Collapses a burst of changes into one write instead of one per action. */
+    private final java.util.concurrent.atomic.AtomicBoolean flushQueued =
+            new java.util.concurrent.atomic.AtomicBoolean();
+
     public OrderManager(HavocOrders plugin, SqlStorage storage) {
         this.plugin = plugin;
         this.storage = storage;
@@ -105,7 +109,11 @@ public class OrderManager {
     }
 
     /** Called on a timer (async) and once on shutdown. Safe to call from any thread. */
-    public void flush() {
+    /**
+     * Writes pending changes. Synchronized because a scheduled flush and an immediate
+     * one can otherwise interleave batches on a single JDBC connection.
+     */
+    public synchronized void flush() {
         if (!dirty.isEmpty()) {
             List<UUID> ids = new ArrayList<>(dirty);
             dirty.removeAll(ids);
@@ -123,6 +131,23 @@ public class OrderManager {
         }
     }
 
+    /**
+     * Asks for a write as soon as possible.
+     *
+     * Anything that hands a player an item or moves money must not sit in memory waiting
+     * for the periodic flush: if the server dies before that flush, the player keeps the
+     * item and the record comes back on restart, which is a duplication bug. Bursts are
+     * collapsed so a busy server still writes in batches.
+     */
+    private void requestFlush() {
+        if (flushQueued.compareAndSet(false, true)) {
+            plugin.async(() -> {
+                flushQueued.set(false);
+                flush();
+            });
+        }
+    }
+
     /** Marks the order for the next flush, or removes it once it is fully settled. */
     private void persistOrRemove(Order order) {
         if (order.isFinished()) {
@@ -133,6 +158,7 @@ public class OrderManager {
             dirty.add(order.getId());
         }
         touch();
+        requestFlush();
     }
 
     // ------------------------------------------------------------------ lookups
@@ -265,6 +291,7 @@ public class OrderManager {
         index(order);
         dirty.add(order.getId());
         touch();
+        requestFlush();
 
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("amount", NumberUtil.count(amount));

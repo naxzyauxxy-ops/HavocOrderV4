@@ -39,7 +39,10 @@ public final class Bedrock {
             Map.entry('\u0455', 'S'), Map.entry('\u1D1B', 'T'), Map.entry('\u1D1C', 'U'),
             Map.entry('\u1D20', 'V'), Map.entry('\u1D21', 'W'), Map.entry('\u028F', 'Y'),
             Map.entry('\u1D22', 'Z'), Map.entry('\u25AA', '-'), Map.entry('\u25B0', '|'),
-            Map.entry('\u2192', '>'), Map.entry('\u2190', '<')
+            Map.entry('\u2192', '>'), Map.entry('\u2190', '<'),
+            Map.entry('\u00d7', 'x'), Map.entry('\u00b7', '-'),
+            Map.entry('\u25b2', '+'), Map.entry('\u25bc', '-'),
+            Map.entry('\u2756', '*')
     );
 
     private Bedrock() {
