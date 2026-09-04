@@ -7,9 +7,6 @@
 # Hex colours (&#f40d0d) and legacy codes (&7) both work.
 
 # Display names for the sort and filter cycles.
-LINES:
-  SEPARATOR: "&8&m                                                  "
-
 NAMES:
   SORT:
     MOST-PAID: "Most Paid"
@@ -34,15 +31,14 @@ DIALOGS:
   ORDERS:
     TITLE: "&#f40d0dᴏʀᴅᴇʀѕ"
     # Overrides SETTINGS.DIALOG.COLUMNS for this screen.
-    COLUMNS: 2
+    COLUMNS: 3
     BODY:
-      - "&7{results} orders &8\u00b7 &7page &f{page}&8/&f{pages}"
+      - "&7Page &f{page}&7/&f{pages} &8| &7{results} orders"
       - "&8Sort: &7{sort}   &8Filter: &7{filter}   &8Search: &7{query}"
-      - "{separator}"
     EMPTY: "&7Nothing matches those filters."
     BUTTONS:
       ORDER:
-        LABEL: "&f{amount_left}\u00d7 {material}\n&a${unit_price} each &8\u00b7 &7you have {held}"
+        LABEL: "&f{amount_left}x {material} &8- &#f40d0d${unit_price}"
         TOOLTIP:
           - "&#f40d0d{player}'s Order"
           - "&f{material}"
@@ -54,7 +50,7 @@ DIALOGS:
           - ""
           - "&8{expires} until it expires"
       OWN-ORDER:
-        LABEL: "&7{amount_left}\u00d7 {material}\n&8yours \u00b7 &7{current}/{max} delivered"
+        LABEL: "&#f40d0d{amount_left}x {material} &8- &7ʏᴏᴜʀѕ"
         TOOLTIP:
           - "&#f40d0dYour Order"
           - "&f{material}"
@@ -112,7 +108,7 @@ DIALOGS:
 
   DELIVER:
     TITLE: "&#f40d0dᴅᴇʟɪᴠᴇʀ &8-> &f{material}"
-    COLUMNS: 3
+    COLUMNS: 2
     # One-click amounts. Buttons only appear when you can actually deliver that many.
     # 64 = a stack, 576 = nine stacks, 1728 = a full shulker.
     QUICK-AMOUNTS: [ 64, 576, 1728 ]

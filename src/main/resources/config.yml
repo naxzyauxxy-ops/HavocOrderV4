@@ -56,9 +56,9 @@ SETTINGS:
     ITEM-SIZE: 48
   # Buttons shown per page in the paginated dialogs. Dialogs scroll, so these can
   # be far higher than a chest GUI allowed.
-  ORDERS-PER-PAGE: 10
-  ITEMS-PER-PAGE: 14
-  COLLECT-PER-PAGE: 10
+  ORDERS-PER-PAGE: 21
+  ITEMS-PER-PAGE: 27
+  COLLECT-PER-PAGE: 15
   SHULKERS:
     # Count and pull items out of shulker boxes the player is carrying.
     DELIVER-FROM-SHULKERS: true
