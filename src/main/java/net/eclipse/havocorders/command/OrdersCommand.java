@@ -80,11 +80,12 @@ public class OrdersCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Typing into a dialog field is unreliable on Bedrock, so searching also has a
-        // plain command form that works everywhere.
-        if (args.length > 0 && args[0].equalsIgnoreCase("search")) {
-            String query = args.length > 1
-                    ? String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length))
+        // Anything that is not a sub-command is a search, so "/orders elytra" works.
+        // This also covers Bedrock, where dialog text fields are unreliable.
+        if (args.length > 0) {
+            int from = args[0].equalsIgnoreCase("search") ? 1 : 0;
+            String query = args.length > from
+                    ? String.join(" ", java.util.Arrays.copyOfRange(args, from, args.length))
                     : "";
             plugin.sessions().get(player).setQuery(query);
         }

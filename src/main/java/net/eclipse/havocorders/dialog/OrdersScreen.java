@@ -42,21 +42,37 @@ public class OrdersScreen extends Screen {
             return session.getCachedBoard();
         }
 
-        String lowered = session.getQuery().toLowerCase(Locale.ROOT);
+        List<String> tokens = tokenise(session.getQuery());
         Category filter = session.getFilter();
         List<Order> matched = new ArrayList<>();
         for (Order order : plugin.orders().listed()) {
             if (!filter.matches(order.getMaterial())) continue;
-            if (!lowered.isEmpty()
-                    && !order.getTypeName().toLowerCase(Locale.ROOT).contains(lowered)
-                    && !order.getOwnerName().toLowerCase(Locale.ROOT).contains(lowered)) {
-                continue;
-            }
+            if (!matches(order, tokens)) continue;
             matched.add(order);
         }
         matched.sort(session.getSort().getComparator());
         session.cacheBoard(matched, version);
         return matched;
+    }
+
+    /** Every word must match the real item type or the owner's name. */
+    private boolean matches(Order order, List<String> tokens) {
+        if (tokens.isEmpty()) return true;
+        String haystack = (order.getTypeName() + ' ' + order.getMaterial().name().replace('_', ' ')
+                + ' ' + order.getOwnerName()).toLowerCase(Locale.ROOT);
+        for (String token : tokens) {
+            if (!haystack.contains(token)) return false;
+        }
+        return true;
+    }
+
+    static List<String> tokenise(String query) {
+        if (query == null || query.isBlank()) return List.of();
+        List<String> tokens = new ArrayList<>();
+        for (String part : query.toLowerCase(Locale.ROOT).trim().split("\\s+")) {
+            if (!part.isBlank()) tokens.add(part);
+        }
+        return tokens;
     }
 
     private Map<String, String> screenPlaceholders(List<Order> results) {
