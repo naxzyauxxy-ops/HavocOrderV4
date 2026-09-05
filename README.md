@@ -293,6 +293,16 @@ would be a quiet item-loss bug, so it is on.
 The hook is entirely reflective and optional. Without HavocSpawners installed the plugin
 runs exactly as before and spawner orders never appear.
 
+If `/orders spawners add` is not behaving, run:
+
+```
+/orders spawners status
+```
+
+It reports exactly why support is off — not installed, not enabled yet, disabled in config,
+or an API mismatch — instead of failing silently. The hook also retries on demand, so it
+recovers if HavocSpawners enables after this plugin.
+
 ## Order limits
 
 `MAX-ORDERS-PER-PLAYER` defaults to **0, meaning unlimited**. Set it to a number to cap

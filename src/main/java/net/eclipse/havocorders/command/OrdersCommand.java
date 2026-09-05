@@ -112,6 +112,13 @@ public class OrdersCommand implements CommandExecutor, TabCompleter {
     private boolean handleSpawners(CommandSender sender, String[] args) {
         String action = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "list";
 
+        if (action.equals("status") || action.equals("debug")) {
+            sender.sendMessage(Text.component("&#f40d0dSpawner support: &f" + plugin.spawners().status()));
+            sender.sendMessage(Text.component("&7Allowed spawners: &f"
+                    + plugin.spawnerCatalogue().entries().size()));
+            return true;
+        }
+
         if (action.equals("list")) {
             if (plugin.spawnerCatalogue().isEmpty()) {
                 sender.sendMessage(Text.component("&7No spawners are orderable yet. "
@@ -138,7 +145,7 @@ public class OrdersCommand implements CommandExecutor, TabCompleter {
         }
 
         if (!action.equals("add")) {
-            sender.sendMessage(Text.component("&cUsage: /orders spawners <add|remove|list>"));
+            sender.sendMessage(Text.component("&cUsage: /orders spawners <add|remove|list|status>"));
             return true;
         }
 
@@ -147,7 +154,7 @@ public class OrdersCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         if (!plugin.spawners().isAvailable()) {
-            sender.sendMessage(Text.component("&cHavocSpawners is not hooked, so spawners cannot be allowed."));
+            sender.sendMessage(Text.component("&cSpawner support is off: &7" + plugin.spawners().status()));
             return true;
         }
 
@@ -192,7 +199,7 @@ public class OrdersCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("spawners")
                 && sender.hasPermission("havocorders.admin")) {
-            options.addAll(List.of("add", "remove", "list"));
+            options.addAll(List.of("add", "remove", "list", "status"));
             options.removeIf(option -> !option.startsWith(args[1].toLowerCase(Locale.ROOT)));
             return options;
         }

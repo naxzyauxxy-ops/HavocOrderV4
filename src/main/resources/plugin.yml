@@ -4,7 +4,7 @@ main: net.eclipse.havocorders.HavocOrders
 api-version: '1.21'
 author: Eclipse
 description: Player-driven buy orders using the 1.21.6+ Dialog API, with Vault economy and sell-all support.
-softdepend: [Vault, PlaceholderAPI]
+softdepend: [Vault, PlaceholderAPI, HavocSpawners]
 commands:
   orders:
     description: Open the orders menu

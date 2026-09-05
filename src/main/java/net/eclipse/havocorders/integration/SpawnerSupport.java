@@ -28,6 +28,8 @@ public class SpawnerSupport {
     private final HavocOrders plugin;
 
     private boolean available;
+    private String status = "not checked yet";
+    private long lastAttempt;
     private Object items;
     private Method isHavocSpawner;
     private Method readEntityType;
@@ -41,16 +43,43 @@ public class SpawnerSupport {
         this.plugin = plugin;
     }
 
+    /**
+     * Re-hooks on demand if the first attempt failed.
+     *
+     * Plugin load order is not guaranteed, so HavocSpawners may enable after this plugin
+     * and a single hook at startup would miss it forever. Retries are throttled because
+     * this is called on every item match.
+     */
     public boolean isAvailable() {
+        if (!available && System.currentTimeMillis() - lastAttempt > 10_000L) {
+            hook();
+        }
         return available;
+    }
+
+    /** Human-readable reason, for the admin command. */
+    public String status() {
+        return status;
     }
 
     public void hook() {
         available = false;
-        if (!plugin.getConfig().getBoolean("SPAWNERS.ENABLED", true)) return;
+        lastAttempt = System.currentTimeMillis();
+
+        if (!plugin.getConfig().getBoolean("SPAWNERS.ENABLED", true)) {
+            status = "disabled in config (SPAWNERS.ENABLED)";
+            return;
+        }
 
         Plugin spawners = Bukkit.getPluginManager().getPlugin("HavocSpawners");
-        if (spawners == null || !spawners.isEnabled()) return;
+        if (spawners == null) {
+            status = "HavocSpawners is not installed";
+            return;
+        }
+        if (!spawners.isEnabled()) {
+            status = "HavocSpawners is installed but not enabled yet";
+            return;
+        }
 
         try {
             items = spawners.getClass().getMethod("items").invoke(spawners);
@@ -66,8 +95,10 @@ public class SpawnerSupport {
             readStoredExp = type.getMethod("readStoredExp", ItemStack.class);
 
             available = true;
+            status = "hooked into HavocSpawners";
             plugin.getLogger().info("Hooked into HavocSpawners - spawner orders enabled.");
         } catch (Throwable ex) {
+            status = "HavocSpawners API did not match: " + ex;
             plugin.getLogger().log(Level.WARNING,
                     "HavocSpawners is present but its API did not match; spawner orders are off.", ex);
             available = false;
