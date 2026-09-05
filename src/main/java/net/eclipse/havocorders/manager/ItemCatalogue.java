@@ -92,6 +92,13 @@ public class ItemCatalogue {
             add(stack, ItemNames.display(stack));
         }
 
+        // Allowed spawners are added after the vanilla sweep because they are exempt from
+        // the blacklist: SPAWNER is blocked as a raw item, but a HavocSpawners spawner an
+        // admin explicitly allowed is a different thing.
+        for (SpawnerCatalogue.Allowed spawner : plugin.spawnerCatalogue().entries()) {
+            add(spawner.template().clone(), spawner.name());
+        }
+
         all.sort(Comparator.comparing(Entry::name, String.CASE_INSENSITIVE_ORDER));
         for (List<Entry> bucket : byCategory.values()) {
             bucket.sort(Comparator.comparing(Entry::name, String.CASE_INSENSITIVE_ORDER));

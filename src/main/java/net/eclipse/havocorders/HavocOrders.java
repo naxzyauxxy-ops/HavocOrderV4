@@ -7,7 +7,9 @@ import net.eclipse.havocorders.economy.EconomyHook;
 import net.eclipse.havocorders.economy.SellPrices;
 import net.eclipse.havocorders.manager.DropJob;
 import net.eclipse.havocorders.manager.InventoryScanner;
+import net.eclipse.havocorders.integration.SpawnerSupport;
 import net.eclipse.havocorders.manager.ItemCatalogue;
+import net.eclipse.havocorders.manager.SpawnerCatalogue;
 import net.eclipse.havocorders.manager.OrderManager;
 import net.eclipse.havocorders.manager.Profiles;
 import net.eclipse.havocorders.manager.SessionManager;
@@ -16,6 +18,7 @@ import net.eclipse.havocorders.storage.LegacyImporter;
 import net.eclipse.havocorders.storage.SqlStorage;
 import net.eclipse.havocorders.util.Category;
 import net.eclipse.havocorders.util.ConfigUpdater;
+import net.eclipse.havocorders.util.ItemMatching;
 import net.eclipse.havocorders.util.NumberUtil;
 import net.eclipse.havocorders.util.Text;
 import org.bukkit.Bukkit;
@@ -51,6 +54,8 @@ public final class HavocOrders extends JavaPlugin {
     private InventoryScanner inventories;
     private Profiles profiles;
     private LegacyImporter importer;
+    private SpawnerSupport spawners;
+    private SpawnerCatalogue spawnerCatalogue;
 
     private final Set<Material> blocked = new HashSet<>();
 
@@ -91,6 +96,15 @@ public final class HavocOrders extends JavaPlugin {
 
         importer = new LegacyImporter(this);
         runAutoImport();
+
+        // Hook the spawners plugin before the catalogue is built, so allowed spawners
+        // are in the picker from the first open.
+        spawners = new SpawnerSupport(this);
+        spawners.hook();
+        ItemMatching.setSpawnerSupport(spawners);
+
+        spawnerCatalogue = new SpawnerCatalogue(this);
+        spawnerCatalogue.load();
 
         catalogue = new ItemCatalogue(this);
         catalogue.build();
@@ -261,6 +275,8 @@ public final class HavocOrders extends JavaPlugin {
         loadBlockedItems();
         NumberUtil.setAbbreviate(getConfig().getBoolean("SETTINGS.ABBREVIATE-NUMBERS", true));
         sellPrices.reload();
+        spawners.hook();
+        spawnerCatalogue.load();
         catalogue.build();
     }
 
@@ -307,6 +323,14 @@ public final class HavocOrders extends JavaPlugin {
 
     public ItemCatalogue catalogue() {
         return catalogue;
+    }
+
+    public SpawnerSupport spawners() {
+        return spawners;
+    }
+
+    public SpawnerCatalogue spawnerCatalogue() {
+        return spawnerCatalogue;
     }
 
     public SessionManager sessions() {

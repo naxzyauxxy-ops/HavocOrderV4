@@ -253,6 +253,46 @@ collectable, but no refund is issued, since the old plugin owned that decision.
 Remove the old plugin before importing so the two are not running against one economy.
 The file is renamed to `*.imported` afterwards so a restart doesn't re-read it.
 
+## Spawner orders (HavocSpawners)
+
+Players can order spawners you have explicitly allowed. Hold one and run:
+
+```
+/orders spawners add zombie Zombie Spawner
+/orders spawners list
+/orders spawners remove zombie
+```
+
+Allowed spawners then appear in the item picker like any other item, and are exempt from
+the `SPAWNER` blacklist entry — the raw vanilla block stays blocked, the allowed spawner
+does not.
+
+**Why the item is captured rather than named.** A spawner is stored as an item with its
+entity type, item material, upgrade level, stack size, stored loot and stored experience in
+its item data. Capturing the item you are holding means the order template is byte-identical
+to what HavocSpawners produces, with no assumptions about that format.
+
+**Why matching is not `isSimilar`.** Delivery normally compares every scrap of item data.
+For spawners that is wrong: a zombie spawner with a few stacks of rotten flesh inside is a
+different item to `isSimilar` than an empty one, so an order would never fill. Spawner
+orders match on identity instead — entity type, item material, and optionally level —
+ignoring stored loot, experience and stack size.
+
+```yaml
+SPAWNERS:
+  ENABLED: true
+  MATCH-LEVEL: true            # a level 3 is a different order from a level 1
+  REQUIRE-EMPTY-STORAGE: true  # refuse spawners that still hold loot
+  REQUIRE-SINGLE: true         # refuse stacked spawners
+```
+
+`REQUIRE-EMPTY-STORAGE` matters: an order hands the buyer a clean copy of the template, so
+accepting a full spawner would silently delete whatever was inside it. Off by default it
+would be a quiet item-loss bug, so it is on.
+
+The hook is entirely reflective and optional. Without HavocSpawners installed the plugin
+runs exactly as before and spawner orders never appear.
+
 ## Order limits
 
 `MAX-ORDERS-PER-PLAYER` defaults to **0, meaning unlimited**. Set it to a number to cap

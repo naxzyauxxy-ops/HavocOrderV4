@@ -199,6 +199,6 @@ public class Order {
     }
 
     public boolean matches(ItemStack other) {
-        return other != null && getItem().isSimilar(other);
+        return net.eclipse.havocorders.util.ItemMatching.matches(getItem(), other);
     }
 }

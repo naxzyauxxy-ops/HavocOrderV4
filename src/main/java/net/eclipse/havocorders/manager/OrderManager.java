@@ -234,7 +234,9 @@ public class OrderManager {
         if (template == null || template.getType() == Material.AIR) {
             return Result.fail(plugin.message("NO-ITEM-SELECTED"));
         }
-        if (plugin.isBlocked(template.getType())) {
+        // SPAWNER is blacklisted as a raw item, but a spawner an admin explicitly allowed
+        // is a different thing, so it is exempt.
+        if (plugin.isBlocked(template.getType()) && !plugin.spawnerCatalogue().isAllowed(template)) {
             return Result.fail(plugin.message("BLOCKED-ITEM"));
         }
 

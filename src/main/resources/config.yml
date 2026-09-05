@@ -138,6 +138,25 @@ IMPORT:
   # Renames the file to *.imported afterwards so a restart does not re-read it.
   RENAME-WHEN-DONE: true
 
+# Ordering spawners from HavocSpawners.
+#
+# Only spawners an admin has explicitly allowed can be ordered. Allow one by holding it
+# and running /orders spawners add <id> [display name] - the item itself is captured, so
+# the template always matches what HavocSpawners hands out.
+#
+# Matching ignores a spawner's stored loot, stored experience and stack size, since those
+# drift while the spawner is used and would otherwise make two identical spawners look
+# like different items.
+SPAWNERS:
+  ENABLED: true
+  # Treat a level 3 spawner as a different item from a level 1.
+  MATCH-LEVEL: true
+  # Refuse to accept a spawner that still holds loot or experience. Orders hand the buyer
+  # a clean copy, so accepting a full one would quietly delete the contents.
+  REQUIRE-EMPTY-STORAGE: true
+  # Refuse stacked spawners, so one delivery is always one spawner.
+  REQUIRE-SINGLE: true
+
 ITEM-RESTRICTIONS:
   BLOCKED-ITEMS:
     - "COMMAND_BLOCK"
