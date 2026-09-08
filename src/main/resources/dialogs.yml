@@ -246,12 +246,64 @@ DIALOGS:
       CHOOSE-ITEM:
         LABEL: "&#f40d0dᴄʜᴏᴏѕᴇ ɪᴛᴇᴍ &7({material})"
         TOOLTIP: [ "&7Pick what you want to buy" ]
+      ENCHANTS:
+        LABEL: "&#f40d0dᴇɴᴄʜᴀɴᴛᴍᴇɴᴛѕ"
+        TOOLTIP:
+          - "&7Ask for specific enchantments"
+          - "&7Current: {enchants}"
       HELD-ITEM:
         LABEL: "&#f40d0dᴜѕᴇ ʜᴇʟᴅ ɪᴛᴇᴍ"
         TOOLTIP: [ "&7Use whatever is in your hand" ]
       CONFIRM:
         LABEL: "&#f40d0dᴄᴏɴꜰɪʀᴍ"
         TOOLTIP: [ "&7Place the order" ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  ENCHANT-EDIT:
+    TITLE: "&#f40d0dᴇɴᴄʜᴀɴᴛᴍᴇɴᴛѕ"
+    COLUMNS: 3
+    ITEMS-PER-PAGE: 27
+    BODY:
+      - "&7Item: &f{material}"
+      - "&7Chosen: {applied}"
+      - "&8Page {page}/{pages}"
+    BUTTONS:
+      ENCHANT:
+        LABEL: "&7{enchantment}"
+        TOOLTIP: [ "&fClick to choose a level" ]
+      ENCHANT-ACTIVE:
+        LABEL: "&#f40d0d{enchantment} {level}"
+        TOOLTIP:
+          - "&aOn this order"
+          - "&fClick to change or remove"
+      PREVIOUS:
+        LABEL: "&#f40d0d< ᴘʀᴇᴠɪᴏᴜѕ"
+        TOOLTIP: [ ]
+      NEXT:
+        LABEL: "&#f40d0dɴᴇxᴛ >"
+        TOOLTIP: [ ]
+      CLEAR:
+        LABEL: "&#f40d0dᴄʟᴇᴀʀ ᴀʟʟ"
+        TOOLTIP: [ "&7Remove every enchantment" ]
+      BACK:
+        LABEL: "&7ʙᴀᴄᴋ"
+        TOOLTIP: [ ]
+
+  ENCHANT-LEVEL:
+    TITLE: "&#f40d0d{enchantment}"
+    COLUMNS: 3
+    BODY:
+      - "&7On: &f{material}"
+      - "&7Currently: &f{current} &8(max {max})"
+    BUTTONS:
+      LEVEL:
+        LABEL: "&#f40d0d{enchantment} {level}"
+        TOOLTIP: [ "&fClick to use this level" ]
+      REMOVE:
+        LABEL: "&cʀᴇᴍᴏᴠᴇ"
+        TOOLTIP: [ "&7Take this enchantment off the order" ]
       BACK:
         LABEL: "&7ʙᴀᴄᴋ"
         TOOLTIP: [ ]

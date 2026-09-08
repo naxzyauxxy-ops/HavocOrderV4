@@ -1,15 +1,11 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.dialog.DialogResponseView;
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
-import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.manager.OrderManager;
 import net.eclipse.havocorders.util.ItemNames;
 import net.eclipse.havocorders.util.NumberUtil;
 import net.eclipse.havocorders.util.Text;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -43,11 +39,11 @@ public class NewOrderScreen extends Screen {
      * A blank or unreadable field keeps the previous value, which is what makes this
      * survive Geyser handing back empty text on Bedrock.
      */
-    private void capture(DialogResponseView view) {
-        Integer amount = NumberUtil.parseAmount(view.getText(AMOUNT), session.getDraftAmount());
+    private void capture(ScreenModel.Responses responses) {
+        Integer amount = NumberUtil.parseAmount(responses.text(AMOUNT), session.getDraftAmount());
         if (amount != null && amount > 0) session.setDraftAmount(amount);
 
-        Double price = NumberUtil.parse(view.getText(PRICE));
+        Double price = NumberUtil.parse(responses.text(PRICE));
         if (price != null && price > 0) session.setDraftPrice(price);
     }
 
@@ -59,55 +55,68 @@ public class NewOrderScreen extends Screen {
         map.put("price", NumberUtil.money(session.getDraftPrice()));
         map.put("total", NumberUtil.money(session.getDraftTotal()));
         map.put("balance", NumberUtil.money(plugin.economy().balance(player)));
+
+        StringBuilder enchants = new StringBuilder();
+        for (java.util.Map.Entry<org.bukkit.enchantments.Enchantment, Integer> entry
+                : EnchantEditScreen.current(draft).entrySet()) {
+            if (enchants.length() > 0) enchants.append("&8, ");
+            enchants.append("&f").append(net.eclipse.havocorders.util.ItemNames.enchantment(entry.getKey()))
+                    .append(' ').append(Text.roman(entry.getValue()));
+        }
+        map.put("enchants", enchants.length() == 0 ? "&7none" : enchants.toString());
         return map;
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         return titleFrom(placeholders());
     }
 
     @Override
-    protected List<DialogBody> body() {
-        List<DialogBody> body = new ArrayList<>();
+    public List<String> bodyLines() {
+        List<String> body = new ArrayList<>();
         ItemStack draft = session.getDraftItem();
-        if (draft != null) body.add(itemBody(draft.clone()));
-        body.addAll(Dialogs.body(lines("BODY"), placeholders()));
+        if (draft != null) body.addAll(resolve(lines("BODY"), placeholders()));
         return body;
     }
 
     @Override
-    protected List<DialogInput> inputs() {
+    public List<ScreenModel.Input> inputs() {
         return List.of(
-                DialogInput.text(AMOUNT, Text.component(string("AMOUNT-LABEL", "&fAmount")))
-                        .initial(String.valueOf(session.getDraftAmount()))
-                        .build(),
-                DialogInput.text(PRICE, Text.component(string("PRICE-LABEL", "&fPrice each")))
-                        .initial(NumberUtil.exact(session.getDraftPrice()))
-                        .build()
+                new ScreenModel.Input(AMOUNT, string("AMOUNT-LABEL", "&fAmount"), String.valueOf(session.getDraftAmount())),
+                new ScreenModel.Input(PRICE, string("PRICE-LABEL", "&fPrice each"), NumberUtil.exact(session.getDraftPrice()))
         );
     }
 
     @Override
-    protected ActionButton exitButton() {
+    public ScreenModel.Button exitButton() {
         // Note: the footer button cannot capture typed input, so the draft keeps
         // whatever was last confirmed on one of the grid buttons.
         return backButton("BACK", placeholders(), () -> new MyOrdersScreen(plugin, player).show());
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         Map<String, String> placeholders = placeholders();
-        List<ActionButton> buttons = new ArrayList<>();
+        List<ScreenModel.Button> buttons = new ArrayList<>();
 
-        buttons.add(configButton("CHOOSE-ITEM", placeholders, (view, audience) -> {
-            capture(view);
+        buttons.add(configButton("CHOOSE-ITEM", placeholders, responses -> {
+            capture(responses);
             click();
             new ItemPickerScreen(plugin, player).show();
         }));
 
-        buttons.add(configButton("HELD-ITEM", placeholders, (view, audience) -> {
-            capture(view);
+        if (session.getDraftItem() != null) {
+            buttons.add(configButton("ENCHANTS", placeholders, responses -> {
+                capture(responses);
+                click();
+                session.setEnchantPage(0);
+                new EnchantEditScreen(plugin, player).show();
+            }));
+        }
+
+        buttons.add(configButton("HELD-ITEM", placeholders, responses -> {
+            capture(responses);
             ItemStack held = player.getInventory().getItemInMainHand();
             if (held == null || held.getType() == Material.AIR) {
                 deny();
@@ -122,8 +131,8 @@ public class NewOrderScreen extends Screen {
             show();
         }));
 
-        buttons.add(configButton("CONFIRM", placeholders, (view, audience) -> {
-            capture(view);
+        buttons.add(configButton("CONFIRM", placeholders, responses -> {
+            capture(responses);
             OrderManager.Result result = plugin.orders().createOrder(
                     player, session.getDraftItem(), session.getDraftAmount(), session.getDraftPrice());
             tell(result.message());

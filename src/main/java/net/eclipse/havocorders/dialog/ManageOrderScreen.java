@@ -1,11 +1,9 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.model.Order;
 import net.eclipse.havocorders.util.Text;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -32,44 +30,43 @@ public class ManageOrderScreen extends Screen {
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         Order order = order();
         return titleFrom(order == null ? Map.of() : Placeholders.of(order));
     }
 
     @Override
-    protected List<DialogBody> body() {
+    public List<String> bodyLines() {
         Order order = order();
         if (order == null) {
-            return List.of(DialogBody.plainMessage(Text.component(plugin.message("ORDER_DELETED"))));
+            return List.of(plugin.message("ORDER_DELETED"));
         }
-        List<DialogBody> body = new ArrayList<>();
-        body.add(itemBody(order.getItemCopy(1)));
-        body.addAll(Dialogs.body(lines("BODY"), Placeholders.of(order)));
+        List<String> body = new ArrayList<>();
+        body.addAll(resolve(lines("BODY"), Placeholders.of(order)));
         return body;
     }
 
     @Override
-    protected ActionButton exitButton() {
+    public ScreenModel.Button exitButton() {
         Order order = order();
         return backButton("BACK", order == null ? Map.of() : Placeholders.of(order),
                 () -> new MyOrdersScreen(plugin, player).show());
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         Order order = order();
-        List<ActionButton> buttons = new ArrayList<>();
+        List<ScreenModel.Button> buttons = new ArrayList<>();
         Map<String, String> placeholders = order == null ? Map.of() : Placeholders.of(order);
 
         if (order != null) {
             if (order.getCollectable() > 0) {
-                buttons.add(configButton("COLLECT", placeholders, (view, audience) -> {
+                buttons.add(configButton("COLLECT", placeholders, responses -> {
                     click();
                     new CollectScreen(plugin, player).show();
                 }));
             }
-            buttons.add(configButton("CANCEL-ORDER", placeholders, (view, audience) -> {
+            buttons.add(configButton("CANCEL-ORDER", placeholders, responses -> {
                 click();
                 new CancelConfirmScreen(plugin, player, orderId).show();
             }));

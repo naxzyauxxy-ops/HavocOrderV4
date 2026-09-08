@@ -89,7 +89,8 @@ public class SqlStorage {
                 + "created BIGINT NOT NULL,"
                 + "expires BIGINT NOT NULL,"
                 + "status VARCHAR(16) NOT NULL,"
-                + "escrowed BOOLEAN NOT NULL DEFAULT 1"
+                + "escrowed BOOLEAN NOT NULL DEFAULT 1,"
+                + "pool TEXT"
                 + ")";
         try (Statement statement = getConnection().createStatement()) {
             statement.executeUpdate(sql);
@@ -97,6 +98,12 @@ public class SqlStorage {
                 // For tables created before the escrowed column existed.
                 statement.executeUpdate("ALTER TABLE " + TABLE
                         + " ADD COLUMN escrowed BOOLEAN NOT NULL DEFAULT 1");
+            } catch (SQLException ignored) {
+                // column already present
+            }
+            try {
+                // Holds the real delivered stacks awaiting collection.
+                statement.executeUpdate("ALTER TABLE " + TABLE + " ADD COLUMN pool TEXT");
             } catch (SQLException ignored) {
                 // column already present
             }
@@ -121,7 +128,7 @@ public class SqlStorage {
              ResultSet results = statement.executeQuery()) {
             while (results.next()) {
                 try {
-                    orders.add(new Order(
+                    Order order = new Order(
                             UUID.fromString(results.getString("id")),
                             UUID.fromString(results.getString("owner")),
                             results.getString("owner_name"),
@@ -135,7 +142,12 @@ public class SqlStorage {
                             results.getLong("expires"),
                             OrderStatus.valueOf(results.getString("status")),
                             results.getBoolean("escrowed")
-                    ));
+                    );
+                    String pool = results.getString("pool");
+                    if (pool != null && !pool.isEmpty()) {
+                        order.setPool(new ArrayList<>(List.of(pool.split(";"))));
+                    }
+                    orders.add(order);
                 } catch (IllegalArgumentException ex) {
                     plugin.getLogger().warning("Skipping malformed order row: " + ex.getMessage());
                 }
@@ -153,10 +165,10 @@ public class SqlStorage {
     public void saveAll(Collection<Order> orders) {
         if (orders.isEmpty()) return;
         String sql = mysql
-                ? "REPLACE INTO " + TABLE + " (id,owner,owner_name,item,amount,unit_price,delivered,collected,paid,created,expires,status,escrowed)"
-                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                : "INSERT OR REPLACE INTO " + TABLE + " (id,owner,owner_name,item,amount,unit_price,delivered,collected,paid,created,expires,status,escrowed)"
-                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                ? "REPLACE INTO " + TABLE + " (id,owner,owner_name,item,amount,unit_price,delivered,collected,paid,created,expires,status,escrowed,pool)"
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                : "INSERT OR REPLACE INTO " + TABLE + " (id,owner,owner_name,item,amount,unit_price,delivered,collected,paid,created,expires,status,escrowed,pool)"
+                + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         try {
             Connection conn = getConnection();
             boolean previousAutoCommit = conn.getAutoCommit();
@@ -176,6 +188,7 @@ public class SqlStorage {
                     statement.setLong(11, order.getExpiresAt());
                     statement.setString(12, order.getStatus().name());
                     statement.setBoolean(13, order.isEscrowed());
+                    statement.setString(14, String.join(";", order.getPool()));
                     statement.addBatch();
                 }
                 statement.executeBatch();

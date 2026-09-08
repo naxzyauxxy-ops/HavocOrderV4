@@ -1,12 +1,10 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.manager.ItemCatalogue;
 import net.eclipse.havocorders.util.NumberUtil;
 import net.eclipse.havocorders.util.Text;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -48,37 +46,37 @@ public class ItemPickerScreen extends Screen {
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         return titleFrom(screenPlaceholders(results()));
     }
 
     @Override
-    protected List<DialogBody> body() {
+    public List<String> bodyLines() {
         List<ItemCatalogue.Entry> results = results();
-        List<DialogBody> body = Dialogs.body(lines("BODY"), screenPlaceholders(results));
+        List<String> body = resolve(lines("BODY"), screenPlaceholders(results));
         if (results.isEmpty()) {
-            body.add(DialogBody.plainMessage(Text.component(string("EMPTY", "&7No matches."))));
+            body.add(string("EMPTY", "&7No matches."));
         }
         return body;
     }
 
     @Override
-    protected ActionButton exitButton() {
+    public ScreenModel.Button exitButton() {
         return backButton("BACK", screenPlaceholders(results()),
                 () -> new NewOrderScreen(plugin, player).show());
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         List<ItemCatalogue.Entry> results = results();
         Map<String, String> screen = screenPlaceholders(results);
         int pages = totalPages(results.size(), perPage());
-        List<ActionButton> buttons = new ArrayList<>();
+        List<ScreenModel.Button> buttons = new ArrayList<>();
 
         for (ItemCatalogue.Entry entry : slice(results, session.getItemPage(), perPage())) {
             Map<String, String> placeholders = new HashMap<>(screen);
             placeholders.put("name", entry.name());
-            buttons.add(configButton("ITEM", placeholders, (view, audience) -> {
+            buttons.add(configButton("ITEM", placeholders, responses -> {
                 if (entry.stack().getType() == Material.ENCHANTED_BOOK) {
                     click();
                     new EnchantPickerScreen(plugin, player).show();
@@ -91,26 +89,26 @@ public class ItemPickerScreen extends Screen {
         }
 
         if (session.getItemPage() > 0) {
-            buttons.add(configButton("PREVIOUS", screen, (view, audience) -> {
+            buttons.add(configButton("PREVIOUS", screen, responses -> {
                 session.setItemPage(session.getItemPage() - 1);
                 click();
                 show();
             }));
         }
         if (session.getItemPage() < pages - 1) {
-            buttons.add(configButton("NEXT", screen, (view, audience) -> {
+            buttons.add(configButton("NEXT", screen, responses -> {
                 session.setItemPage(session.getItemPage() + 1);
                 click();
                 show();
             }));
         }
 
-        buttons.add(configButton("FILTER", screen, (view, audience) -> {
+        buttons.add(configButton("FILTER", screen, responses -> {
             session.setItemFilter(session.getItemFilter().next());
             click();
             show();
         }));
-        buttons.add(configButton("SEARCH", screen, (view, audience) -> {
+        buttons.add(configButton("SEARCH", screen, responses -> {
             click();
             new SearchScreen(plugin, player, session.getItemQuery(), value -> {
                 session.setItemQuery(value);

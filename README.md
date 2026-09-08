@@ -92,6 +92,32 @@ Detection goes through Floodgate by reflection — no compile-time dependency, a
 without Floodgate simply treats everyone as Java. Java players see no difference either
 way; both adaptations are per-viewer.
 
+## Dialog or chest menus
+
+One setting decides how every menu is drawn, for the whole server:
+
+```yaml
+UI-MODE: "DIALOG"   # or MODERN
+```
+
+- **DIALOG** — Minecraft's dialog windows. Private text fields, renders on Bedrock through
+  Geyser. Needs Paper 1.21.7+ and a 1.21.6+ client.
+- **MODERN** — classic chest menus. Works on any client and any server version.
+
+Both modes render the **same screen definitions**. A screen describes what it wants — a
+title, some lines, some inputs, some buttons — and a renderer turns that into a dialog or a
+chest. That is deliberate: two separate menu systems would mean every future feature built
+twice, and the two drifting apart. Add a button once and it appears in both.
+
+Layout in chest mode is worked out from the button count rather than a slot map, so there
+is no per-menu slot config to maintain. Content buttons fill from the top, controls sit on
+the bottom row.
+
+**One real trade-off.** A chest has nowhere to type, so in MODERN mode text entry — search,
+prices, amounts — falls back to a chat prompt. Other players cannot see it, but
+chat-logging plugins can. Dialog mode keeps those as proper private fields. If search
+privacy matters to you, that is the reason to stay on DIALOG.
+
 ## Search privacy
 
 Search uses the dialog's own text field. The value goes straight from your client to the
@@ -252,6 +278,46 @@ collectable, but no refund is issued, since the old plugin owned that decision.
 
 Remove the old plugin before importing so the two are not running against one economy.
 The file is renamed to `*.imported` afterwards so a restart doesn't re-read it.
+
+## Choosing enchantments on an order
+
+The New Order screen has an **Enchantments** button once an item is picked. It lists only
+the enchantments that apply to that item, and each one opens a level picker. An order can
+then be for a Sharpness V, Unbreaking III netherite sword rather than just a sword.
+
+```yaml
+SETTINGS:
+  ENCHANTS:
+    ALLOW-UNSAFE: false      # allow enchantments that do not fit the item, and over-max levels
+    MAX-UNSAFE-LEVEL: 10
+```
+
+## How a delivery is judged
+
+```yaml
+SETTINGS:
+  MATCHING:
+    ENCHANTMENTS: "AT-LEAST"
+    IGNORE-DAMAGE: true
+    MIN-DURABILITY-PERCENT: 0
+```
+
+`AT-LEAST` means a delivered item must carry at least the enchantments ordered, at that
+level or higher; extras are a bonus rather than a mismatch. `EXACT` requires the
+enchantment set to match precisely.
+
+`IGNORE-DAMAGE` fixes elytra and tool orders. Item matching normally compares every scrap
+of data, so an elytra someone has actually flown is a different item from a pristine one
+and could never fill an order for "an elytra" — deliveries failed seemingly at random,
+depending on whether the deliverer's item happened to be untouched.
+
+Because wear is now ignored, **the buyer receives the exact item that was handed in**, not
+a fresh copy of the template. Orders keep the real delivered stacks rather than a count, so
+a battered elytra arrives battered. Without that, ignoring wear would have quietly turned
+the order board into a free repair service.
+
+Use `MIN-DURABILITY-PERCENT` if you want a floor — set it to 50 and anything under half
+durability is refused.
 
 ## Spawner orders (HavocSpawners)
 

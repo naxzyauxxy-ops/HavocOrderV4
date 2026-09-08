@@ -18,6 +18,11 @@ import net.eclipse.havocorders.storage.LegacyImporter;
 import net.eclipse.havocorders.storage.SqlStorage;
 import net.eclipse.havocorders.util.Category;
 import net.eclipse.havocorders.util.ConfigUpdater;
+import net.eclipse.havocorders.ui.ChestListener;
+import net.eclipse.havocorders.ui.ChestRenderer;
+import net.eclipse.havocorders.ui.DialogRenderer;
+import net.eclipse.havocorders.ui.Prompts;
+import net.eclipse.havocorders.ui.Renderer;
 import net.eclipse.havocorders.util.ItemMatching;
 import net.eclipse.havocorders.util.NumberUtil;
 import net.eclipse.havocorders.util.Text;
@@ -56,6 +61,8 @@ public final class HavocOrders extends JavaPlugin {
     private LegacyImporter importer;
     private SpawnerSupport spawners;
     private SpawnerCatalogue spawnerCatalogue;
+    private Renderer renderer;
+    private Prompts prompts;
 
     private final Set<Material> blocked = new HashSet<>();
 
@@ -102,6 +109,7 @@ public final class HavocOrders extends JavaPlugin {
         spawners = new SpawnerSupport(this);
         spawners.hook();
         ItemMatching.setSpawnerSupport(spawners);
+        applyMatchingRules();
 
         spawnerCatalogue = new SpawnerCatalogue(this);
         spawnerCatalogue.load();
@@ -113,6 +121,11 @@ public final class HavocOrders extends JavaPlugin {
 
         sessions = new SessionManager();
         getServer().getPluginManager().registerEvents(sessions, this);
+
+        prompts = new Prompts(this);
+        getServer().getPluginManager().registerEvents(prompts, this);
+        getServer().getPluginManager().registerEvents(new ChestListener(this), this);
+        applyUiMode();
 
         PluginCommand command = getCommand("orders");
         if (command != null) {
@@ -276,8 +289,17 @@ public final class HavocOrders extends JavaPlugin {
         NumberUtil.setAbbreviate(getConfig().getBoolean("SETTINGS.ABBREVIATE-NUMBERS", true));
         sellPrices.reload();
         spawners.hook();
+        applyMatchingRules();
+        applyUiMode();
         spawnerCatalogue.load();
         catalogue.build();
+    }
+
+    private void applyMatchingRules() {
+        ItemMatching.configure(
+                "AT-LEAST".equalsIgnoreCase(getConfig().getString("SETTINGS.MATCHING.ENCHANTMENTS", "AT-LEAST")),
+                getConfig().getBoolean("SETTINGS.MATCHING.IGNORE-DAMAGE", true),
+                getConfig().getInt("SETTINGS.MATCHING.MIN-DURABILITY-PERCENT", 0));
     }
 
     public boolean isBlocked(Material material) {
@@ -335,6 +357,30 @@ public final class HavocOrders extends JavaPlugin {
 
     public SessionManager sessions() {
         return sessions;
+    }
+
+    public Renderer renderer() {
+        return renderer;
+    }
+
+    public Prompts prompts() {
+        return prompts;
+    }
+
+    /**
+     * Picks how screens are drawn. Both modes render the same screen definitions, so a
+     * feature never has to be built twice.
+     */
+    private void applyUiMode() {
+        String mode = getConfig().getString("SETTINGS.UI-MODE", "DIALOG");
+        if ("MODERN".equalsIgnoreCase(mode) || "CHEST".equalsIgnoreCase(mode)
+                || "GUI".equalsIgnoreCase(mode)) {
+            renderer = new ChestRenderer(this);
+            getLogger().info("UI mode: MODERN (chest menus).");
+        } else {
+            renderer = new DialogRenderer();
+            getLogger().info("UI mode: DIALOG.");
+        }
     }
 
     public InventoryScanner inventories() {

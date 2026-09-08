@@ -1,13 +1,11 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.model.Order;
 import net.eclipse.havocorders.util.Category;
 import net.eclipse.havocorders.util.NumberUtil;
 import net.eclipse.havocorders.util.Text;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -90,31 +88,31 @@ public class OrdersScreen extends Screen {
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         return titleFrom(screenPlaceholders(results()));
     }
 
     @Override
-    protected List<DialogBody> body() {
+    public List<String> bodyLines() {
         List<Order> results = results();
-        List<DialogBody> body = Dialogs.body(lines("BODY"), screenPlaceholders(results));
+        List<String> body = resolve(lines("BODY"), screenPlaceholders(results));
         if (results.isEmpty()) {
-            body.add(DialogBody.plainMessage(Text.component(string("EMPTY", "&7Nothing here."))));
+            body.add(string("EMPTY", "&7Nothing here."));
         }
         return body;
     }
 
     @Override
-    protected ActionButton exitButton() {
-        return Dialogs.closeButton(button("CLOSE"), screenPlaceholders(results()), width(), style());
+    public ScreenModel.Button exitButton() {
+        return closeButton("CLOSE", screenPlaceholders(results()));
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         List<Order> results = results();
         Map<String, String> screen = screenPlaceholders(results);
         int pages = totalPages(results.size(), perPage());
-        List<ActionButton> buttons = new ArrayList<>();
+        List<ScreenModel.Button> buttons = new ArrayList<>();
 
         for (Order order : slice(results, session.getPage(), perPage())) {
             boolean mine = order.getOwner().equals(player.getUniqueId());
@@ -123,7 +121,7 @@ public class OrdersScreen extends Screen {
 
             // Your own orders can't be delivered to, so send them somewhere useful
             // instead of bouncing them off an error.
-            buttons.add(configButton(mine ? "OWN-ORDER" : "ORDER", placeholders, (view, audience) -> {
+            buttons.add(configButton(mine ? "OWN-ORDER" : "ORDER", placeholders, responses -> {
                 click();
                 if (mine) {
                     new ManageOrderScreen(plugin, player, order.getId()).show();
@@ -134,38 +132,38 @@ public class OrdersScreen extends Screen {
         }
 
         if (session.getPage() > 0) {
-            buttons.add(configButton("PREVIOUS", screen, (view, audience) -> {
+            buttons.add(configButton("PREVIOUS", screen, responses -> {
                 session.setPage(session.getPage() - 1);
                 click();
                 show();
             }));
         }
         if (session.getPage() < pages - 1) {
-            buttons.add(configButton("NEXT", screen, (view, audience) -> {
+            buttons.add(configButton("NEXT", screen, responses -> {
                 session.setPage(session.getPage() + 1);
                 click();
                 show();
             }));
         }
 
-        buttons.add(configButton("SORT", screen, (view, audience) -> {
+        buttons.add(configButton("SORT", screen, responses -> {
             session.setSort(session.getSort().next());
             click();
             show();
         }));
-        buttons.add(configButton("FILTER", screen, (view, audience) -> {
+        buttons.add(configButton("FILTER", screen, responses -> {
             session.setFilter(session.getFilter().next());
             click();
             show();
         }));
-        buttons.add(configButton("SEARCH", screen, (view, audience) -> {
+        buttons.add(configButton("SEARCH", screen, responses -> {
             click();
             new SearchScreen(plugin, player, session.getQuery(), value -> {
                 session.setQuery(value);
                 new OrdersScreen(plugin, player).show();
             }, () -> new OrdersScreen(plugin, player).show()).show();
         }));
-        buttons.add(configButton("MY-ORDERS", screen, (view, audience) -> {
+        buttons.add(configButton("MY-ORDERS", screen, responses -> {
             click();
             new MyOrdersScreen(plugin, player).show();
         }));

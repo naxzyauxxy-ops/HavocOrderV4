@@ -343,14 +343,16 @@ public class OrderManager {
         }
 
         // Trust what was actually removed rather than what was expected.
-        deliverable = plugin.inventories().remove(player, current.getItem(), deliverable);
+        List<ItemStack> handedOver =
+                plugin.inventories().removeAndCollect(player, current.getItem(), deliverable);
+        deliverable = handedOver.stream().mapToInt(ItemStack::getAmount).sum();
         if (deliverable <= 0) {
             player.sendMessage(Text.component(plugin.message("NOTHING-TO-DELIVER")));
             return 0;
         }
 
         double payout = deliverable * current.getUnitPrice();
-        current.addDelivered(deliverable);
+        current.addDelivered(handedOver);
         persistOrRemove(current);
 
         if (!plugin.getConfig().getBoolean("SETTINGS.ESCROW", true)) {
@@ -382,7 +384,7 @@ public class OrderManager {
             return 0;
         }
 
-        int given = give(player, order.getItem(), available);
+        int given = giveStacks(player, order.takeFromPool(available));
         if (given <= 0) {
             player.sendMessage(Text.component(plugin.message("COLLECT.INVENTORY_FULL")));
             return 0;
@@ -403,7 +405,7 @@ public class OrderManager {
     public int collectAll(Player player) {
         int total = 0;
         for (Order order : collectable(player.getUniqueId())) {
-            int given = give(player, order.getItem(), order.getCollectable());
+            int given = giveStacks(player, order.takeFromPool(order.getCollectable()));
             if (given <= 0) continue;
             order.addCollected(given);
             persistOrRemove(order);
@@ -413,6 +415,22 @@ public class OrderManager {
             player.sendMessage(Text.component(plugin.message("COLLECT.NOTHING_TO_COLLECT")));
         }
         return total;
+    }
+
+    /** Hands over real stacks and reports how many items actually fitted. */
+    private int giveStacks(Player player, List<ItemStack> stacks) {
+        int given = 0;
+        for (ItemStack stack : stacks) {
+            Map<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
+            int notGiven = leftover.values().stream().mapToInt(ItemStack::getAmount).sum();
+            given += stack.getAmount() - notGiven;
+            for (ItemStack left : leftover.values()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), left);
+                given += left.getAmount();
+            }
+        }
+        if (given > 0) plugin.inventories().invalidate(player);
+        return given;
     }
 
     private int give(Player player, ItemStack template, int quantity) {

@@ -1,12 +1,10 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.manager.OrderManager;
 import net.eclipse.havocorders.model.Order;
 import net.eclipse.havocorders.util.Text;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -32,33 +30,33 @@ public class CancelConfirmScreen extends Screen {
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         Order order = order();
         return titleFrom(order == null ? Map.of() : Placeholders.of(order));
     }
 
     @Override
-    protected List<DialogBody> body() {
+    public List<String> bodyLines() {
         Order order = order();
         if (order == null) {
-            return List.of(DialogBody.plainMessage(Text.component(plugin.message("ORDER_DELETED"))));
+            return List.of(plugin.message("ORDER_DELETED"));
         }
-        return Dialogs.body(lines("BODY"), Placeholders.of(order));
+        return resolve(lines("BODY"), Placeholders.of(order));
     }
 
     @Override
-    protected ActionButton exitButton() {
+    public ScreenModel.Button exitButton() {
         Order order = order();
         return backButton("BACK", order == null ? Map.of() : Placeholders.of(order),
                 () -> new ManageOrderScreen(plugin, player, orderId).show());
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         Order order = order();
         Map<String, String> placeholders = order == null ? Map.of() : Placeholders.of(order);
         return List.of(
-                configButton("CONFIRM", placeholders, (view, audience) -> {
+                configButton("CONFIRM", placeholders, responses -> {
                     Order current = order();
                     if (current == null) {
                         deny();

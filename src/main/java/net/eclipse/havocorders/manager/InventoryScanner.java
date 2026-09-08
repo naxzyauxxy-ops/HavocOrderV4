@@ -41,12 +41,28 @@ public class InventoryScanner {
 
         /** Loose in the inventory. */
         public int direct(ItemStack template) {
-            return direct.getOrDefault(key(template), 0);
+            return count(direct, template);
+        }
+
+        /**
+         * Counts by the order's matching rule rather than exact item data, so a worn
+         * elytra is counted towards an order for an elytra.
+         */
+        private int count(Map<ItemStack, Integer> source, ItemStack template) {
+            Integer exact = source.get(key(template));
+            int total = exact == null ? 0 : exact;
+            for (Map.Entry<ItemStack, Integer> entry : source.entrySet()) {
+                if (entry.getKey().equals(key(template))) continue;
+                if (net.eclipse.havocorders.util.ItemMatching.matches(template, entry.getKey())) {
+                    total += entry.getValue();
+                }
+            }
+            return total;
         }
 
         /** Inside shulker boxes. */
         public int nested(ItemStack template) {
-            return nested.getOrDefault(key(template), 0);
+            return count(nested, template);
         }
 
         public int total(ItemStack template) {
@@ -136,7 +152,18 @@ public class InventoryScanner {
      * Returns how many were actually taken.
      */
     public int remove(Player player, ItemStack template, int amount) {
-        if (amount <= 0) return 0;
+        return removeAndCollect(player, template, amount).stream()
+                .mapToInt(ItemStack::getAmount).sum();
+    }
+
+    /**
+     * Removes up to {@code amount} matching items and returns the actual stacks taken,
+     * so the caller can pass on exactly what the player handed over rather than a copy
+     * of some template.
+     */
+    public java.util.List<ItemStack> removeAndCollect(Player player, ItemStack template, int amount) {
+        java.util.List<ItemStack> taken = new java.util.ArrayList<>();
+        if (amount <= 0) return taken;
         int remaining = amount;
 
         ItemStack[] contents = player.getInventory().getStorageContents();
@@ -144,8 +171,11 @@ public class InventoryScanner {
         // Pass one: loose stacks.
         for (int slot = 0; slot < contents.length && remaining > 0; slot++) {
             ItemStack stack = contents[slot];
-            if (stack == null || !template.isSimilar(stack)) continue;
+            if (stack == null || !net.eclipse.havocorders.util.ItemMatching.matches(template, stack)) continue;
             int take = Math.min(stack.getAmount(), remaining);
+            ItemStack copy = stack.clone();
+            copy.setAmount(take);
+            taken.add(copy);
             stack.setAmount(stack.getAmount() - take);
             if (stack.getAmount() <= 0) contents[slot] = null;
             remaining -= take;
@@ -164,8 +194,12 @@ public class InventoryScanner {
                 boolean changed = false;
                 for (int index = 0; index < inner.length && remaining > 0; index++) {
                     ItemStack candidate = inner[index];
-                    if (candidate == null || !template.isSimilar(candidate)) continue;
+                    if (candidate == null
+                            || !net.eclipse.havocorders.util.ItemMatching.matches(template, candidate)) continue;
                     int take = Math.min(candidate.getAmount(), remaining);
+                    ItemStack copy = candidate.clone();
+                    copy.setAmount(take);
+                    taken.add(copy);
                     candidate.setAmount(candidate.getAmount() - take);
                     if (candidate.getAmount() <= 0) inner[index] = null;
                     remaining -= take;
@@ -182,6 +216,6 @@ public class InventoryScanner {
 
         player.getInventory().setStorageContents(contents);
         invalidate(player);
-        return amount - remaining;
+        return taken;
     }
 }

@@ -44,6 +44,13 @@ SETTINGS:
   EXPIRY-CHECK-SECONDS: 60
   # Show 1.23m instead of 1,230,000. Input always accepts both forms.
   ABBREVIATE-NUMBERS: true
+  # How every menu is drawn, for the whole server:
+  #   DIALOG - Minecraft's dialog windows. Private text fields, works on Bedrock via
+  #            Geyser, needs Paper 1.21.7+ and a 1.21.6+ client.
+  #   MODERN - classic chest menus. Works on any client, but text entry falls back to
+  #            chat, so searches are visible to chat-logging plugins.
+  UI-MODE: "DIALOG"
+
   # Dialog sizing. Buttons are laid out in a grid; more columns = a wider window.
   # Individual dialogs can override COLUMNS in dialogs.yml.
   DIALOG:
@@ -59,6 +66,21 @@ SETTINGS:
   ORDERS-PER-PAGE: 21
   ITEMS-PER-PAGE: 27
   COLLECT-PER-PAGE: 15
+  ENCHANTS:
+    # Let players ask for enchantments that do not normally go on the item, and for
+    # levels above the vanilla maximum.
+    ALLOW-UNSAFE: false
+    MAX-UNSAFE-LEVEL: 10
+  # How a delivered item is judged against what was ordered.
+  MATCHING:
+    # AT-LEAST: the item must have at least the enchantments ordered, at that level or
+    #           higher, and may carry extras. EXACT: the enchantments must match exactly.
+    ENCHANTMENTS: "AT-LEAST"
+    # Ignore how worn an item is. Needed for anything with durability - an elytra a player
+    # has actually flown will never match a pristine one otherwise.
+    IGNORE-DAMAGE: true
+    # Refuse items below this much durability, as a percentage. 0 accepts anything.
+    MIN-DURABILITY-PERCENT: 0
   SHULKERS:
     # Count and pull items out of shulker boxes the player is carrying.
     DELIVER-FROM-SHULKERS: true
@@ -204,6 +226,7 @@ BEDROCK:
 MESSAGES:
   PREFIX: ""
   SEARCH-USE-COMMAND: "&#f40d0dSearch box came back empty. Try &f/orders search <text>&#f40d0d instead."
+  PROMPT-CHAT: "&#f40d0dType the {label} in chat, or 'cancel'."
   NO-PERMISSION: "&#f40d0dYou don't have permission to do that."
   PLAYERS-ONLY: "&#f40d0dThis command can only be used by players."
   RELOADED: "&#f40d0dConfiguration reloaded."

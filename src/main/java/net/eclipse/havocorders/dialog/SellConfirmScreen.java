@@ -1,11 +1,9 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.manager.OrderManager;
 import net.eclipse.havocorders.util.NumberUtil;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -31,25 +29,25 @@ public class SellConfirmScreen extends Screen {
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         return titleFrom(placeholders());
     }
 
     @Override
-    protected List<DialogBody> body() {
-        return Dialogs.body(lines("BODY"), placeholders());
+    public List<String> bodyLines() {
+        return resolve(lines("BODY"), placeholders());
     }
 
     @Override
-    protected ActionButton exitButton() {
+    public ScreenModel.Button exitButton() {
         return backButton("BACK", placeholders(), () -> new CollectScreen(plugin, player).show());
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         Map<String, String> placeholders = placeholders();
         return List.of(
-                configButton("CONFIRM", placeholders, (view, audience) -> {
+                configButton("CONFIRM", placeholders, responses -> {
                     double earned = plugin.orders().sellAll(player);
                     if (earned > 0) success();
                     else deny();

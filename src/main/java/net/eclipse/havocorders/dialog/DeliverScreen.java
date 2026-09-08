@@ -1,14 +1,11 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
-import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.manager.InventoryScanner;
 import net.eclipse.havocorders.model.Order;
 import net.eclipse.havocorders.util.NumberUtil;
 import net.eclipse.havocorders.util.Text;
-import net.kyori.adventure.text.Component;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
@@ -71,31 +68,28 @@ public class DeliverScreen extends Screen {
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         Order order = order();
         return titleFrom(order == null ? Map.of() : placeholders(order));
     }
 
     @Override
-    protected List<DialogBody> body() {
+    public List<String> bodyLines() {
         Order order = order();
         if (order == null) {
-            return List.of(DialogBody.plainMessage(Text.component(plugin.message("ORDER_DELETED"))));
+            return List.of(plugin.message("ORDER_DELETED"));
         }
-        List<DialogBody> body = new ArrayList<>();
-        body.add(itemBody(order.getItemCopy(1)));
-        body.addAll(Dialogs.body(lines("BODY"), placeholders(order)));
+        List<String> body = new ArrayList<>();
+        body.addAll(resolve(lines("BODY"), placeholders(order)));
         return body;
     }
 
     @Override
-    protected List<DialogInput> inputs() {
+    public List<ScreenModel.Input> inputs() {
         Order order = order();
         if (order == null) return List.of();
         int suggested = Math.max(1, deliverable(order));
-        return List.of(DialogInput.text(KEY, Text.component(string("INPUT-LABEL", "&fAmount")))
-                .initial(String.valueOf(suggested))
-                .build());
+        return List.of(new ScreenModel.Input(KEY, string("INPUT-LABEL", "&fAmount"), String.valueOf(suggested)));
     }
 
     /** Quick-amount buttons, e.g. 64 / 576 / 1728. */
@@ -108,11 +102,11 @@ public class DeliverScreen extends Screen {
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         Order order = order();
-        List<ActionButton> buttons = new ArrayList<>();
+        List<ScreenModel.Button> buttons = new ArrayList<>();
         if (order == null) {
-            buttons.add(configButton("BACK", Map.of(), (view, audience) -> {
+            buttons.add(configButton("BACK", Map.of(), responses -> {
                 click();
                 new OrdersScreen(plugin, player).show();
             }));
@@ -121,7 +115,7 @@ public class DeliverScreen extends Screen {
 
         Map<String, String> placeholders = placeholders(order);
 
-        buttons.add(configButton("DELIVER", placeholders, (view, audience) -> {
+        buttons.add(configButton("DELIVER", placeholders, responses -> {
             Order current = order();
             if (current == null) {
                 deny();
@@ -130,7 +124,7 @@ public class DeliverScreen extends Screen {
                 return;
             }
             int max = deliverable(current);
-            String typed = view.getText(KEY);
+            String typed = responses.text(KEY);
             // Bedrock text fields can come back empty through Geyser, so a blank box
             // means "everything I can" rather than an error the player cannot escape.
             Integer amount = typed == null || typed.isBlank()
@@ -145,7 +139,7 @@ public class DeliverScreen extends Screen {
             submit(current, amount);
         }));
 
-        buttons.add(configButton("DELIVER-ALL", placeholders, (view, audience) -> {
+        buttons.add(configButton("DELIVER-ALL", placeholders, responses -> {
             Order current = order();
             if (current == null) {
                 deny();
@@ -161,7 +155,7 @@ public class DeliverScreen extends Screen {
             Map<String, String> quick = new HashMap<>(placeholders);
             quick.put("amount", NumberUtil.count(amount));
             quick.put("value", NumberUtil.money(amount * order.getUnitPrice()));
-            buttons.add(configButton("QUICK", quick, (view, audience) -> {
+            buttons.add(configButton("QUICK", quick, responses -> {
                 Order current = order();
                 if (current == null) {
                     deny();
@@ -176,7 +170,7 @@ public class DeliverScreen extends Screen {
     }
 
     @Override
-    protected ActionButton exitButton() {
+    public ScreenModel.Button exitButton() {
         Order order = order();
         if (order == null) return null;
         return backButton("BACK", placeholders(order), () -> new OrdersScreen(plugin, player).show());

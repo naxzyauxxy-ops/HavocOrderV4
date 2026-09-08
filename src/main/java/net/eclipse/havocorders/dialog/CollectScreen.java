@@ -1,13 +1,11 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.manager.OrderManager;
 import net.eclipse.havocorders.model.Order;
 import net.eclipse.havocorders.util.NumberUtil;
 import net.eclipse.havocorders.util.Text;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -73,16 +71,16 @@ public class CollectScreen extends Screen {
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         return titleFrom(screenPlaceholders(results()));
     }
 
     @Override
-    protected List<DialogBody> body() {
+    public List<String> bodyLines() {
         List<Order> results = results();
-        List<DialogBody> body = Dialogs.body(lines("BODY"), screenPlaceholders(results));
+        List<String> body = resolve(lines("BODY"), screenPlaceholders(results));
         if (results.isEmpty()) {
-            body.add(DialogBody.plainMessage(Text.component(string("EMPTY", "&7Nothing waiting."))));
+            body.add(string("EMPTY", "&7Nothing waiting."));
         }
         return body;
     }
@@ -98,17 +96,17 @@ public class CollectScreen extends Screen {
     }
 
     @Override
-    protected ActionButton exitButton() {
+    public ScreenModel.Button exitButton() {
         return backButton("BACK", screenPlaceholders(results()),
                 () -> new MyOrdersScreen(plugin, player).show());
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         List<Order> results = results();
         Map<String, String> screen = screenPlaceholders(results);
         int pages = totalPages(results.size(), perPage());
-        List<ActionButton> buttons = new ArrayList<>();
+        List<ScreenModel.Button> buttons = new ArrayList<>();
 
         for (Order order : slice(results, session.getCollectPage(), perPage())) {
             int waiting = order.getCollectable();
@@ -116,7 +114,7 @@ public class CollectScreen extends Screen {
             placeholders.put("amount", NumberUtil.count(waiting));
             placeholders.put("value", NumberUtil.money(
                     plugin.sellPrices().totalPrice(order.getItem(), waiting)));
-            buttons.add(configButton("LOOT", placeholders, (view, audience) -> {
+            buttons.add(configButton("LOOT", placeholders, responses -> {
                 // Takes whatever fits; the rest stays on the order for next time.
                 int collected = plugin.orders().collect(player, order, order.getCollectable());
                 if (collected > 0) success();
@@ -126,45 +124,45 @@ public class CollectScreen extends Screen {
         }
 
         if (session.getCollectPage() > 0) {
-            buttons.add(configButton("PREVIOUS", screen, (view, audience) -> {
+            buttons.add(configButton("PREVIOUS", screen, responses -> {
                 session.setCollectPage(session.getCollectPage() - 1);
                 click();
                 show();
             }));
         }
         if (session.getCollectPage() < pages - 1) {
-            buttons.add(configButton("NEXT", screen, (view, audience) -> {
+            buttons.add(configButton("NEXT", screen, responses -> {
                 session.setCollectPage(session.getCollectPage() + 1);
                 click();
                 show();
             }));
         }
 
-        buttons.add(configButton("COLLECT-ALL", screen, (view, audience) -> {
+        buttons.add(configButton("COLLECT-ALL", screen, responses -> {
             int collected = plugin.orders().collectAll(player);
             if (collected > 0) success();
             else deny();
             show();
         }));
 
-        buttons.add(configButton("DROP-PAGE", screen, (view, audience) ->
+        buttons.add(configButton("DROP-PAGE", screen, responses ->
                 drop(ordersInPages(results, 1))));
 
         if (pages > 1) {
-            buttons.add(configButton("DROP-PAGES", screen, (view, audience) ->
+            buttons.add(configButton("DROP-PAGES", screen, responses ->
                     drop(ordersInPages(results, pageBatch()))));
-            buttons.add(configButton("DROP-ALL", screen, (view, audience) -> {
+            buttons.add(configButton("DROP-ALL", screen, responses -> {
                 click();
                 new DropConfirmScreen(plugin, player).show();
             }));
         } else if (!results.isEmpty()) {
-            buttons.add(configButton("DROP-ALL", screen, (view, audience) -> {
+            buttons.add(configButton("DROP-ALL", screen, responses -> {
                 click();
                 new DropConfirmScreen(plugin, player).show();
             }));
         }
 
-        buttons.add(configButton("SELL-ALL", screen, (view, audience) -> {
+        buttons.add(configButton("SELL-ALL", screen, responses -> {
             click();
             new SellConfirmScreen(plugin, player).show();
         }));

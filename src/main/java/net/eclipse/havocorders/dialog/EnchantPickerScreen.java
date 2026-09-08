@@ -1,10 +1,8 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.manager.ItemCatalogue;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -36,34 +34,33 @@ public class EnchantPickerScreen extends Screen {
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         return titleFrom(screenPlaceholders(plugin.catalogue().enchantments().size()));
     }
 
     @Override
-    protected List<DialogBody> body() {
-        return Dialogs.body(lines("BODY"),
-                screenPlaceholders(plugin.catalogue().enchantments().size()));
+    public List<String> bodyLines() {
+        return resolve(lines("BODY"), screenPlaceholders(plugin.catalogue().enchantments().size()));
     }
 
     @Override
-    protected ActionButton exitButton() {
+    public ScreenModel.Button exitButton() {
         return backButton("BACK", screenPlaceholders(plugin.catalogue().enchantments().size()),
                 () -> new ItemPickerScreen(plugin, player).show());
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         List<ItemCatalogue.EnchantEntry> all = plugin.catalogue().enchantments();
         Map<String, String> screen = screenPlaceholders(all.size());
         int pages = totalPages(all.size(), perPage());
-        List<ActionButton> buttons = new ArrayList<>();
+        List<ScreenModel.Button> buttons = new ArrayList<>();
 
         for (ItemCatalogue.EnchantEntry entry : slice(all, session.getEnchantPage(), perPage())) {
             Map<String, String> placeholders = new HashMap<>(screen);
             placeholders.put("enchantment", entry.enchantmentName());
             placeholders.put("level", entry.levelLabel());
-            buttons.add(configButton("ENCHANT", placeholders, (view, audience) -> {
+            buttons.add(configButton("ENCHANT", placeholders, responses -> {
                 session.setDraftItem(entry.book());
                 success();
                 new NewOrderScreen(plugin, player).show();
@@ -71,14 +68,14 @@ public class EnchantPickerScreen extends Screen {
         }
 
         if (session.getEnchantPage() > 0) {
-            buttons.add(configButton("PREVIOUS", screen, (view, audience) -> {
+            buttons.add(configButton("PREVIOUS", screen, responses -> {
                 session.setEnchantPage(session.getEnchantPage() - 1);
                 click();
                 show();
             }));
         }
         if (session.getEnchantPage() < pages - 1) {
-            buttons.add(configButton("NEXT", screen, (view, audience) -> {
+            buttons.add(configButton("NEXT", screen, responses -> {
                 session.setEnchantPage(session.getEnchantPage() + 1);
                 click();
                 show();

@@ -1,12 +1,10 @@
 package net.eclipse.havocorders.dialog;
 
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import net.eclipse.havocorders.HavocOrders;
+import net.eclipse.havocorders.ui.ScreenModel;
 import net.eclipse.havocorders.model.Order;
 import net.eclipse.havocorders.util.NumberUtil;
 import net.eclipse.havocorders.util.Text;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -59,65 +57,65 @@ public class MyOrdersScreen extends Screen {
     }
 
     @Override
-    protected Component title() {
+    public String title() {
         return titleFrom(screenPlaceholders(results()));
     }
 
     @Override
-    protected List<DialogBody> body() {
+    public List<String> bodyLines() {
         List<Order> results = results();
-        List<DialogBody> body = Dialogs.body(lines("BODY"), screenPlaceholders(results));
+        List<String> body = resolve(lines("BODY"), screenPlaceholders(results));
         if (results.isEmpty()) {
-            body.add(DialogBody.plainMessage(Text.component(string("EMPTY", "&7No orders."))));
+            body.add(string("EMPTY", "&7No orders."));
         }
         return body;
     }
 
     @Override
-    protected ActionButton exitButton() {
+    public ScreenModel.Button exitButton() {
         return backButton("BACK", screenPlaceholders(results()),
                 () -> new OrdersScreen(plugin, player).show());
     }
 
     @Override
-    protected List<ActionButton> buttons() {
+    public List<ScreenModel.Button> buttons() {
         List<Order> results = results();
         Map<String, String> screen = screenPlaceholders(results);
         int pages = totalPages(results.size(), perPage());
-        List<ActionButton> buttons = new ArrayList<>();
+        List<ScreenModel.Button> buttons = new ArrayList<>();
 
         for (Order order : slice(results, session.getMyOrdersPage(), perPage())) {
-            buttons.add(configButton("ORDER", Placeholders.of(order), (view, audience) -> {
+            buttons.add(configButton("ORDER", Placeholders.of(order), responses -> {
                 click();
                 new ManageOrderScreen(plugin, player, order.getId()).show();
             }));
         }
 
         if (session.getMyOrdersPage() > 0) {
-            buttons.add(configButton("PREVIOUS", screen, (view, audience) -> {
+            buttons.add(configButton("PREVIOUS", screen, responses -> {
                 session.setMyOrdersPage(session.getMyOrdersPage() - 1);
                 click();
                 show();
             }));
         }
         if (session.getMyOrdersPage() < pages - 1) {
-            buttons.add(configButton("NEXT", screen, (view, audience) -> {
+            buttons.add(configButton("NEXT", screen, responses -> {
                 session.setMyOrdersPage(session.getMyOrdersPage() + 1);
                 click();
                 show();
             }));
         }
 
-        buttons.add(configButton("NEW-ORDER", screen, (view, audience) -> {
+        buttons.add(configButton("NEW-ORDER", screen, responses -> {
             click();
             session.clearDraft();
             new NewOrderScreen(plugin, player).show();
         }));
-        buttons.add(configButton("COLLECT", screen, (view, audience) -> {
+        buttons.add(configButton("COLLECT", screen, responses -> {
             click();
             new CollectScreen(plugin, player).show();
         }));
-        buttons.add(configButton("ALERTS", screen, (view, audience) -> {
+        buttons.add(configButton("ALERTS", screen, responses -> {
             boolean enabled = plugin.profiles().toggleAlerts(player.getUniqueId());
             click();
             tell(plugin.message(enabled ? "ALERTS-ON" : "ALERTS-OFF"));

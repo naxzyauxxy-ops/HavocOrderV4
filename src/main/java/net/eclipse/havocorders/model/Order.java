@@ -5,6 +5,8 @@ import net.eclipse.havocorders.util.ItemSerializer;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class Order {
@@ -22,6 +24,15 @@ public class Order {
     private int delivered;
     private int collected;
     private double paid;
+
+    /**
+     * The actual stacks that were delivered and not yet collected, base64 encoded.
+     *
+     * Orders used to hand the owner copies of the template. Once wear is ignored when
+     * matching, that would turn a battered elytra into a pristine one on collection -
+     * free repairs. Keeping the real items means what was handed in is what comes out.
+     */
+    private final List<String> pool = new ArrayList<>();
 
     private final long createdAt;
     private long expiresAt;
@@ -121,6 +132,63 @@ public class Order {
 
     public int getDelivered() {
         return delivered;
+    }
+
+    /** Records the real stacks handed in, so they can be given out unchanged. */
+    public void addDelivered(List<ItemStack> stacks) {
+        int quantity = 0;
+        for (ItemStack stack : stacks) {
+            if (stack == null || stack.getAmount() <= 0) continue;
+            pool.add(ItemSerializer.encodeFull(stack));
+            quantity += stack.getAmount();
+        }
+        if (quantity > 0) addDelivered(quantity);
+    }
+
+    public List<String> getPool() {
+        return pool;
+    }
+
+    public void setPool(List<String> encoded) {
+        pool.clear();
+        if (encoded != null) pool.addAll(encoded);
+    }
+
+    /**
+     * Removes up to {@code max} items from the pool and returns the real stacks.
+     * Falls back to copies of the template for orders that predate the pool, and for
+     * anything imported from another plugin.
+     */
+    public List<ItemStack> takeFromPool(int max) {
+        List<ItemStack> taken = new ArrayList<>();
+        int remaining = max;
+
+        while (remaining > 0 && !pool.isEmpty()) {
+            ItemStack stack = ItemSerializer.decode(pool.get(0));
+            if (stack == null) {
+                pool.remove(0);
+                continue;
+            }
+            if (stack.getAmount() <= remaining) {
+                pool.remove(0);
+                taken.add(stack);
+                remaining -= stack.getAmount();
+            } else {
+                ItemStack part = stack.clone();
+                part.setAmount(remaining);
+                stack.setAmount(stack.getAmount() - remaining);
+                pool.set(0, ItemSerializer.encodeFull(stack));
+                taken.add(part);
+                remaining = 0;
+            }
+        }
+
+        while (remaining > 0) {
+            int size = Math.min(remaining, getItem().getMaxStackSize());
+            taken.add(getItemCopy(size));
+            remaining -= size;
+        }
+        return taken;
     }
 
     public void addDelivered(int quantity) {

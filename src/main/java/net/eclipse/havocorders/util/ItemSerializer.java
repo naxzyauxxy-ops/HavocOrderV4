@@ -19,6 +19,11 @@ public final class ItemSerializer {
         return Base64.getEncoder().encodeToString(single.serializeAsBytes());
     }
 
+    /** Keeps the stack size, for storing what was actually delivered. */
+    public static String encodeFull(ItemStack item) {
+        return Base64.getEncoder().encodeToString(item.clone().serializeAsBytes());
+    }
+
     public static ItemStack decode(String encoded) {
         if (encoded == null || encoded.isEmpty()) return null;
         try {
