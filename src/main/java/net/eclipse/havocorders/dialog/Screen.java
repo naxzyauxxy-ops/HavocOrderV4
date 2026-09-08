@@ -55,16 +55,9 @@ public abstract class Screen {
         return player;
     }
 
-    /** Grid width. A per-dialog COLUMNS entry wins over the global default. */
-    public int columns() {
-        int fallback = plugin.getConfig().getInt("SETTINGS.DIALOG.COLUMNS", 3);
-        ConfigurationSection section = section();
-        int columns = section == null ? fallback : section.getInt("COLUMNS", fallback);
-        return Math.max(1, columns);
-    }
-
-    public int itemSize() {
-        return plugin.getConfig().getInt("SETTINGS.DIALOG.ITEM-SIZE", 48);
+    /** Layout for this menu: size, slots, filler. */
+    public ConfigurationSection layout() {
+        return section();
     }
 
     /** Resolves configured lines, dropping any that end up empty. */
@@ -72,11 +65,6 @@ public abstract class Screen {
         return Text.applyPruned(lines, common(placeholders));
     }
 
-    /** Button width in pixels. The API caps this at 1024. */
-    public int width() {
-        int width = plugin.getConfig().getInt("SETTINGS.DIALOG.BUTTON-WIDTH", 200);
-        return Math.max(1, Math.min(1024, width));
-    }
 
     /** Placeholders every screen gets, whatever else it adds. */
     protected Map<String, String> common(Map<String, String> placeholders) {
@@ -88,7 +76,7 @@ public abstract class Screen {
     }
 
     protected ConfigurationSection section() {
-        return plugin.dialogSection(configPath());
+        return plugin.menuSection(configPath());
     }
 
     protected ConfigurationSection button(String key) {
@@ -108,12 +96,30 @@ public abstract class Screen {
         return section == null ? List.of() : section.getStringList(key);
     }
 
-    /** Rendering rules for whoever is looking at this screen. */
-    public Dialogs.Style style() {
-        if (!Bedrock.isBedrock(player)) return Dialogs.Style.JAVA;
-        return new Dialogs.Style(
-                plugin.getConfig().getBoolean("BEDROCK.ASCII-LABELS", true),
-                plugin.getConfig().getBoolean("BEDROCK.INLINE-TOOLTIPS", true));
+    /**
+     * Text handling for whoever is looking at this menu. Bedrock's font has no glyphs for
+     * the small caps the menus use, so those are rewritten to plain ASCII for those
+     * players only. Chest menus show lore natively there, so nothing else is needed.
+     */
+    public Style style() {
+        boolean ascii = Bedrock.isBedrock(player)
+                && plugin.getConfig().getBoolean("BEDROCK.ASCII-LABELS", true);
+        return new Style(ascii);
+    }
+
+    /** How text is adapted for one viewer. */
+    public record Style(boolean ascii) {
+
+        public String text(String input) {
+            return ascii ? Bedrock.ascii(input) : input;
+        }
+
+        public List<String> text(List<String> input) {
+            if (!ascii) return input;
+            List<String> out = new java.util.ArrayList<>(input.size());
+            for (String line : input) out.add(Bedrock.ascii(line));
+            return out;
+        }
     }
 
     protected boolean isBedrock() {
@@ -135,8 +141,8 @@ public abstract class Screen {
                 : Material.matchMaterial(section.getString("MATERIAL", "PAPER"));
 
         return ScreenModel.Button.of(key,
-                Text.apply(label, common(placeholders)),
-                Text.applyPruned(tooltip, common(placeholders)),
+                style().text(Text.apply(label, common(placeholders))),
+                style().text(Text.applyPruned(tooltip, common(placeholders))),
                 icon, fallback == null ? Material.PAPER : fallback, action);
     }
 
@@ -159,7 +165,7 @@ public abstract class Screen {
     }
 
     public void show() {
-        plugin.renderer().render(this);
+        plugin.gui().render(this);
     }
 
     /** Re-show this screen after an action. Runs on the main thread next tick. */

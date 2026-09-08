@@ -18,11 +18,9 @@ import net.eclipse.havocorders.storage.LegacyImporter;
 import net.eclipse.havocorders.storage.SqlStorage;
 import net.eclipse.havocorders.util.Category;
 import net.eclipse.havocorders.util.ConfigUpdater;
-import net.eclipse.havocorders.ui.ChestListener;
-import net.eclipse.havocorders.ui.ChestRenderer;
-import net.eclipse.havocorders.ui.DialogRenderer;
+import net.eclipse.havocorders.ui.Gui;
+import net.eclipse.havocorders.ui.GuiListener;
 import net.eclipse.havocorders.ui.Prompts;
-import net.eclipse.havocorders.ui.Renderer;
 import net.eclipse.havocorders.util.ItemMatching;
 import net.eclipse.havocorders.util.NumberUtil;
 import net.eclipse.havocorders.util.Text;
@@ -61,7 +59,7 @@ public final class HavocOrders extends JavaPlugin {
     private LegacyImporter importer;
     private SpawnerSupport spawners;
     private SpawnerCatalogue spawnerCatalogue;
-    private Renderer renderer;
+    private Gui gui;
     private Prompts prompts;
 
     private final Set<Material> blocked = new HashSet<>();
@@ -70,7 +68,7 @@ public final class HavocOrders extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         syncConfigFiles();
-        reloadDialogs();
+        reloadMenus();
         loadBlockedItems();
         NumberUtil.setAbbreviate(getConfig().getBoolean("SETTINGS.ABBREVIATE-NUMBERS", true));
 
@@ -124,8 +122,8 @@ public final class HavocOrders extends JavaPlugin {
 
         prompts = new Prompts(this);
         getServer().getPluginManager().registerEvents(prompts, this);
-        getServer().getPluginManager().registerEvents(new ChestListener(this), this);
-        applyUiMode();
+        gui = new Gui(this);
+        getServer().getPluginManager().registerEvents(new GuiListener(this), this);
 
         PluginCommand command = getCommand("orders");
         if (command != null) {
@@ -223,7 +221,7 @@ public final class HavocOrders extends JavaPlugin {
         if (seconds <= 0) return;
 
         File configFile = new File(getDataFolder(), "config.yml");
-        File dialogFile = new File(getDataFolder(), "dialogs.yml");
+        File dialogFile = new File(getDataFolder(), "menus.yml");
         long[] stamps = {configFile.lastModified(), dialogFile.lastModified()};
 
         getServer().getScheduler().runTaskTimer(this, () -> {
@@ -260,13 +258,13 @@ public final class HavocOrders extends JavaPlugin {
         if (config.changed()) reloadConfig();
         ConfigUpdater.report(this, config);
 
-        ConfigUpdater.Result dialogs = ConfigUpdater.update(this, "dialogs.yml");
+        ConfigUpdater.Result dialogs = ConfigUpdater.update(this, "menus.yml");
         ConfigUpdater.report(this, dialogs);
     }
 
-    public void reloadDialogs() {
-        File file = new File(getDataFolder(), "dialogs.yml");
-        if (!file.exists()) saveResource("dialogs.yml", false);
+    public void reloadMenus() {
+        File file = new File(getDataFolder(), "menus.yml");
+        if (!file.exists()) saveResource("menus.yml", false);
         dialogs = YamlConfiguration.loadConfiguration(file);
     }
 
@@ -284,13 +282,12 @@ public final class HavocOrders extends JavaPlugin {
 
     public void reloadEverything() {
         reloadConfig();
-        reloadDialogs();
+        reloadMenus();
         loadBlockedItems();
         NumberUtil.setAbbreviate(getConfig().getBoolean("SETTINGS.ABBREVIATE-NUMBERS", true));
         sellPrices.reload();
         spawners.hook();
         applyMatchingRules();
-        applyUiMode();
         spawnerCatalogue.load();
         catalogue.build();
     }
@@ -306,8 +303,13 @@ public final class HavocOrders extends JavaPlugin {
         return material == null || material == Material.AIR || blocked.contains(material);
     }
 
-    public ConfigurationSection dialogSection(String path) {
-        return dialogs.getConfigurationSection("DIALOGS." + path);
+    public ConfigurationSection menuSection(String path) {
+        return dialogs.getConfigurationSection("MENUS." + path);
+    }
+
+    /** Shared menu values such as the border item. */
+    public String menuString(String path, String fallback) {
+        return dialogs.getString(path, fallback);
     }
 
     public String sortName(SortOption option) {
@@ -359,29 +361,14 @@ public final class HavocOrders extends JavaPlugin {
         return sessions;
     }
 
-    public Renderer renderer() {
-        return renderer;
+    public Gui gui() {
+        return gui;
     }
 
     public Prompts prompts() {
         return prompts;
     }
 
-    /**
-     * Picks how screens are drawn. Both modes render the same screen definitions, so a
-     * feature never has to be built twice.
-     */
-    private void applyUiMode() {
-        String mode = getConfig().getString("SETTINGS.UI-MODE", "DIALOG");
-        if ("MODERN".equalsIgnoreCase(mode) || "CHEST".equalsIgnoreCase(mode)
-                || "GUI".equalsIgnoreCase(mode)) {
-            renderer = new ChestRenderer(this);
-            getLogger().info("UI mode: MODERN (chest menus).");
-        } else {
-            renderer = new DialogRenderer();
-            getLogger().info("UI mode: DIALOG.");
-        }
-    }
 
     public InventoryScanner inventories() {
         return inventories;

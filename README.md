@@ -1,21 +1,65 @@
 # HavocOrders
 
-Player-driven buy orders for **Paper / Purpur 1.21.7+**, built entirely on Minecraft's
-native **Dialog API**. No chest GUIs anywhere — every screen is a real dialog window.
+Player-driven buy orders for **Paper / Purpur 1.21.7+**, with a chest-menu interface laid out
+entirely from config.
 
 Players post orders ("I'll pay $12 each for 512 diamonds"), anyone can deliver and get paid
 instantly, and the owner collects, drops, or sells the loot.
 
+## The menus
+
+Everything is a chest menu, laid out from `menus.yml`. Each menu declares its size, which
+slots hold content, and a fixed slot for every named control, so buttons never move as
+players page through:
+
+```yaml
+ORDERS:
+  SIZE: 54
+  INFO-SLOT: 4
+  CONTENT-SLOTS: [ 10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34 ]
+  SLOTS:
+    PREVIOUS: 45
+    SORT: 47
+    FILTER: 48
+    SEARCH: 49
+    CLOSE: 52
+    NEXT: 53
+```
+
+Content sits in an inset rectangle with a one-slot border, controls run along the bottom
+row, and every empty slot is filled with a border pane, so a half-empty page still looks
+deliberate rather than like a broken grid:
+
+```yaml
+FILLER:
+  MATERIAL: "GRAY_STAINED_GLASS_PANE"
+  NAME: " "
+```
+
+Each button has its own `MATERIAL`, `LABEL` and `TOOLTIP`. Entries that represent an item —
+an order, a listing, waiting loot — use the real item as their icon, so the menu shows what
+it is about rather than a wall of identical panes.
+
+The body text of each menu lives on an information item at `INFO-SLOT`, which is also where
+the item being ordered, bought or previewed is shown.
+
+**One thing to keep in step:** the per-page counts in `config.yml` must match the number of
+`CONTENT-SLOTS` on the matching menu. Set 21 slots and 30 per page, and nine entries have
+nowhere to be drawn.
+
+Text entry — search, prices, amounts — is typed in chat, since a chest has nowhere to type.
+Other players cannot see it, but chat-logging plugins can.
+
 ## Requirements
 
-- **Server:** Paper or Purpur **1.21.7 or newer** (that's when Paper shipped the dialog API)
-- **Client:** Minecraft **1.21.6 or newer** — dialogs do not render on older clients
+- **Server:** Paper or Purpur **1.21+**
+- **Client:** any — the interface is chest menus, so Java and Bedrock both work
 - **Vault** plus an economy provider (EssentialsX Economy, CMI, ...)
 - JDK 21 to build
 
 ## Screens
 
-| Dialog | What it does |
+| Menu | What it does |
 | --- | --- |
 | Orders | The board: paged, sortable, filterable, searchable |
 | Deliver | Progress bar, what you're carrying, payout preview, quick-amount buttons |
@@ -56,74 +100,15 @@ surface under a type it is not. Seller names remain searchable.
 
 ## Java and Bedrock
 
-Geyser translates these dialogs into Bedrock forms, so Bedrock players get the real UI
-rather than a fallback. Two things do not survive that translation, and both are handled:
-
-**Text fields can come back empty.** This is a confirmed Geyser bug
-([GeyserMC/Geyser#6377](https://github.com/GeyserMC/Geyser/issues/6377)): `getText` returns
-`""` on Bedrock while working on Java. Every field here now has a safe default instead of a
-dead end:
-
-| Field | Blank input does |
-| --- | --- |
-| Deliver amount | Delivers everything you can |
-| Order amount / price | Keeps the current value |
-| Auction price | Keeps the price already set, else points at `/ah sell <price>` |
-| Search | Keeps the previous search, and tells Bedrock players the command form |
-
-Nothing is reachable only by typing into a dialog. `/orders search <text>`,
-`/ah search <text>` and `/ah sell <price>` all work from Bedrock chat, and the quick-amount
-buttons on the deliver screen cover the common cases with no typing at all.
-
-**Buttons have no hover text on Bedrock**, so tooltips are invisible there — which would
-have hidden things that matter, like the renamed-item warning and durability. For Bedrock
-players the tooltip is folded into the button label instead.
-
-Bedrock's font also lacks the small-caps glyphs the configs use (`ᴏʀᴅᴇʀѕ`), so those are
-rewritten to plain ASCII for those players only.
+Chest menus render natively on both, so there is no dialog translation involved and no
+version floor beyond the plugin's own. The one gap is Bedrock's font, which has no glyphs
+for the small caps the menus use; those are rewritten to plain ASCII for Bedrock players
+only, via Floodgate. Java players are unaffected.
 
 ```yaml
 BEDROCK:
   ASCII-LABELS: true
-  INLINE-TOOLTIPS: true
 ```
-
-Detection goes through Floodgate by reflection — no compile-time dependency, and a server
-without Floodgate simply treats everyone as Java. Java players see no difference either
-way; both adaptations are per-viewer.
-
-## Dialog or chest menus
-
-One setting decides how every menu is drawn, for the whole server:
-
-```yaml
-UI-MODE: "DIALOG"   # or MODERN
-```
-
-- **DIALOG** — Minecraft's dialog windows. Private text fields, renders on Bedrock through
-  Geyser. Needs Paper 1.21.7+ and a 1.21.6+ client.
-- **MODERN** — classic chest menus. Works on any client and any server version.
-
-Both modes render the **same screen definitions**. A screen describes what it wants — a
-title, some lines, some inputs, some buttons — and a renderer turns that into a dialog or a
-chest. That is deliberate: two separate menu systems would mean every future feature built
-twice, and the two drifting apart. Add a button once and it appears in both.
-
-Layout in chest mode is worked out from the button count rather than a slot map, so there
-is no per-menu slot config to maintain. Content buttons fill from the top, controls sit on
-the bottom row.
-
-**One real trade-off.** A chest has nowhere to type, so in MODERN mode text entry — search,
-prices, amounts — falls back to a chat prompt. Other players cannot see it, but
-chat-logging plugins can. Dialog mode keeps those as proper private fields. If search
-privacy matters to you, that is the reason to stay on DIALOG.
-
-## Search privacy
-
-Search uses the dialog's own text field. The value goes straight from your client to the
-server with the button click: it never enters chat, so it does not appear in the chat box,
-in other players' screenshots, or in chat-logging plugins. This is the same privacy a sign
-would give you, without the fake-block packet hacks.
 
 ## Dialog size
 
@@ -144,7 +129,7 @@ SETTINGS:
 Roughly, window width is `COLUMNS x BUTTON-WIDTH`. Three 200px columns fills most of a
 normal-scale screen; push `BUTTON-WIDTH` toward 300 or `COLUMNS` to 4 if you run a low GUI
 scale. Any dialog can override the column count on its own with a `COLUMNS:` key in
-`dialogs.yml` — the deliver screen uses 2 because it is mostly text and inputs.
+`menus.yml` — the deliver screen uses 2 because it is mostly text and inputs.
 
 Dialogs scroll, so the per-page counts are far higher than a chest GUI allowed: 21 orders
 per page in a 3-wide grid is seven rows at a glance.
@@ -193,7 +178,7 @@ The busiest screen, so it gets the most detail:
   exactly what that pays
 - What filling the whole order would pay
 - A free-text amount field accepting `1k`, `2.5k`, `half`, `all`
-- **Quick-amount buttons** from `QUICK-AMOUNTS` in `dialogs.yml` (default 64 / 576 / 1728 —
+- **Quick-amount buttons** from `QUICK-AMOUNTS` in `menus.yml` (default 64 / 576 / 1728 —
   a stack, nine stacks, a shulker). They only appear when you can actually deliver that
   many, so the screen never shows a button that would fail.
 
@@ -439,7 +424,7 @@ for a minute, and logs when it hooks in. Commands report the missing economy unt
 
 ## Live config reloading
 
-`config.yml` and `dialogs.yml` are re-read when their timestamps change, so edits apply
+`config.yml` and `menus.yml` are re-read when their timestamps change, so edits apply
 without a restart or a reload command:
 
 ```yaml
@@ -452,7 +437,7 @@ it is unrelated to duplication.
 ## Updating
 
 New settings from a plugin update are written into your existing `config.yml` and
-`dialogs.yml` on startup. Your values are never changed, nothing is removed, and the
+`menus.yml` on startup. Your values are never changed, nothing is removed, and the
 previous file is saved as `config.yml.bak`. The console lists every key it added.
 
 ```yaml
@@ -487,8 +472,7 @@ So a *new* setting appears by itself, but a *changed default* is still yours to 
 ## Config files
 
 - `config.yml` — database, economy, limits, sell prices, drop safety, messages
-- `dialogs.yml` — every title, body line, button label and tooltip, with `{placeholders}`
-  and hex colours (`&#f40d0d`)
+- `menus.yml` — every layout, title, body line, button label, material and tooltip
 
 ## Build
 
