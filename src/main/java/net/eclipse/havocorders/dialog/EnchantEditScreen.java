@@ -129,7 +129,7 @@ public class EnchantEditScreen extends Screen {
             placeholders.put("status", level == null ? "off" : "on");
 
             buttons.add(configButton(level == null ? "ENCHANT" : "ENCHANT-ACTIVE", placeholders,
-                    responses -> {
+                    null, responses -> {
                         click();
                         new EnchantLevelScreen(plugin, player, enchantment).show();
                     }));
@@ -187,5 +187,10 @@ public class EnchantEditScreen extends Screen {
             meta.addEnchant(enchantment, level, unsafe);
         }
         item.setItemMeta(meta);
+    }
+
+    @Override
+    public org.bukkit.inventory.ItemStack bodyIcon() {
+        return draft() == null ? null : draft().clone();
     }
 }

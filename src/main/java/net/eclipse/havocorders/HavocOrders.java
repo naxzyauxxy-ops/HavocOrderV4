@@ -46,12 +46,14 @@ import java.util.logging.Level;
 
 public final class HavocOrders extends JavaPlugin {
 
-    private FileConfiguration dialogs;
+    private static HavocOrders inst;
 
-    private EconomyHook economy;
+    private FileConfiguration menus;
+
+    private EconomyHook econ;
     private SellPrices sellPrices;
     private SqlStorage storage;
-    private OrderManager orderManager;
+    private OrderManager orders;
     private ItemCatalogue catalogue;
     private SessionManager sessions;
     private InventoryScanner inventories;
@@ -64,27 +66,32 @@ public final class HavocOrders extends JavaPlugin {
 
     private final Set<Material> blocked = new HashSet<>();
 
+    public static HavocOrders get() {
+        return inst;
+    }
+
     @Override
     public void onEnable() {
+        inst = this;
+
+        // resources
         saveDefaultConfig();
         syncConfigFiles();
         reloadMenus();
         loadBlockedItems();
         NumberUtil.setAbbreviate(getConfig().getBoolean("SETTINGS.ABBREVIATE-NUMBERS", true));
 
-        economy = new EconomyHook(this);
-        if (!economy.setup()) {
-            // Do not disable. Economy providers such as EssentialsX register their Vault
-            // service during their own enable, so if they load after this plugin the
-            // service simply is not there yet. Disabling here is why the plugin appeared
-            // dead until it was reloaded by hand. Wait for it instead.
+        // economy. don't disable if it's missing - EssentialsX and friends register their
+        // vault service in their own onEnable, so we might just be first in the load order
+        this.econ = new EconomyHook(this);
+        if (!econ.setup()) {
             getLogger().warning("No Vault economy registered yet - waiting for one.");
             waitForEconomy();
         }
+        this.sellPrices = new SellPrices(this);
 
-        sellPrices = new SellPrices(this);
-
-        storage = new SqlStorage(this);
+        // storage
+        this.storage = new SqlStorage(this);
         try {
             storage.initialise();
         } catch (SQLException ex) {
@@ -93,29 +100,25 @@ public final class HavocOrders extends JavaPlugin {
             return;
         }
 
-        orderManager = new OrderManager(this, storage);
-        orderManager.loadAll();
-
-        profiles = new Profiles(this, storage);
+        // core
+        this.orders   = new OrderManager(this, storage);
+        this.profiles = new Profiles(this, storage);
+        this.importer = new LegacyImporter(this);
+        orders.loadAll();
         profiles.loadAll();
-
-        importer = new LegacyImporter(this);
         runAutoImport();
 
-        // Hook the spawners plugin before the catalogue is built, so allowed spawners
-        // are in the picker from the first open.
-        spawners = new SpawnerSupport(this);
+        // spawners have to be hooked before the catalogue builds or they miss the picker
+        this.spawners = new SpawnerSupport(this);
         spawners.hook();
         ItemMatching.setSpawnerSupport(spawners);
         applyMatchingRules();
 
-        spawnerCatalogue = new SpawnerCatalogue(this);
+        this.spawnerCatalogue = new SpawnerCatalogue(this);
+        this.catalogue        = new ItemCatalogue(this);
+        this.inventories      = new InventoryScanner(this);
         spawnerCatalogue.load();
-
-        catalogue = new ItemCatalogue(this);
         catalogue.build();
-
-        inventories = new InventoryScanner(this);
 
         sessions = new SessionManager();
         getServer().getPluginManager().registerEvents(sessions, this);
@@ -138,12 +141,12 @@ public final class HavocOrders extends JavaPlugin {
         registerPlaceholders();
 
         long expiryTicks = Math.max(20L, getConfig().getInt("SETTINGS.EXPIRY-CHECK-SECONDS", 60) * 20L);
-        getServer().getScheduler().runTaskTimer(this, () -> orderManager.tickExpiry(), expiryTicks, expiryTicks);
+        getServer().getScheduler().runTaskTimer(this, () -> orders.tickExpiry(), expiryTicks, expiryTicks);
 
         // Single batched writer. Nothing else touches the database at runtime.
         long saveTicks = Math.max(20L, getConfig().getInt("SETTINGS.SAVE-INTERVAL-SECONDS", 30) * 20L);
         getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
-            orderManager.flush();
+            orders.flush();
             profiles.flush();
         }, saveTicks, saveTicks);
 
@@ -194,11 +197,11 @@ public final class HavocOrders extends JavaPlugin {
 
             @Override
             public void run() {
-                if (economy.isReady()) {
+                if (econ.isReady()) {
                     cancel();
                     return;
                 }
-                if (economy.setup()) {
+                if (econ.setup()) {
                     getLogger().info("Vault economy found - fully enabled.");
                     cancel();
                     return;
@@ -213,7 +216,7 @@ public final class HavocOrders extends JavaPlugin {
     }
 
     /**
-     * Reloads config and dialogs when the files change on disk, so edits apply without a
+     * Reloads config and menus when the files change on disk, so edits apply without a
      * restart or a manual reload.
      */
     private void watchConfigFiles() {
@@ -238,9 +241,9 @@ public final class HavocOrders extends JavaPlugin {
     @Override
     public void onDisable() {
         if (profiles != null) profiles.flush();
-        if (orderManager != null) {
-            orderManager.flush();
-            storage.saveAll(orderManager.snapshot());
+        if (orders != null) {
+            orders.flush();
+            storage.saveAll(orders.snapshot());
         }
         if (storage != null) storage.close();
     }
@@ -248,7 +251,7 @@ public final class HavocOrders extends JavaPlugin {
     // ------------------------------------------------------------------ config
 
     /**
-     * Brings config.yml and dialogs.yml up to date with this build before anything reads
+     * Brings config.yml and menus.yml up to date with this build before anything reads
      * them, so a jar update never needs settings pasted in by hand.
      */
     private void syncConfigFiles() {
@@ -258,14 +261,14 @@ public final class HavocOrders extends JavaPlugin {
         if (config.changed()) reloadConfig();
         ConfigUpdater.report(this, config);
 
-        ConfigUpdater.Result dialogs = ConfigUpdater.update(this, "menus.yml");
-        ConfigUpdater.report(this, dialogs);
+        ConfigUpdater.Result menus = ConfigUpdater.update(this, "menus.yml");
+        ConfigUpdater.report(this, menus);
     }
 
     public void reloadMenus() {
         File file = new File(getDataFolder(), "menus.yml");
         if (!file.exists()) saveResource("menus.yml", false);
-        dialogs = YamlConfiguration.loadConfiguration(file);
+        menus = YamlConfiguration.loadConfiguration(file);
     }
 
     private void loadBlockedItems() {
@@ -304,25 +307,25 @@ public final class HavocOrders extends JavaPlugin {
     }
 
     public ConfigurationSection menuSection(String path) {
-        return dialogs.getConfigurationSection("MENUS." + path);
+        return menus.getConfigurationSection("MENUS." + path);
     }
 
     /** Shared menu values such as the border item. */
     public String menuString(String path, String fallback) {
-        return dialogs.getString(path, fallback);
+        return menus.getString(path, fallback);
     }
 
     public String sortName(SortOption option) {
-        return dialogs.getString("NAMES.SORT." + option.getConfigKey(), Text.pretty(option.name()));
+        return menus.getString("NAMES.SORT." + option.getConfigKey(), Text.pretty(option.name()));
     }
 
     public String categoryName(Category category) {
-        return dialogs.getString("NAMES.FILTER." + category.name(), Text.pretty(category.name()));
+        return menus.getString("NAMES.FILTER." + category.name(), Text.pretty(category.name()));
     }
 
-    /** Reusable line templates from dialogs.yml LINES. */
+    /** Reusable line templates from menus.yml LINES. */
     public String line(String key, String fallback) {
-        return dialogs.getString("LINES." + key, fallback);
+        return menus.getString("LINES." + key, fallback);
     }
 
     public String message(String path) {
@@ -334,7 +337,7 @@ public final class HavocOrders extends JavaPlugin {
     // ------------------------------------------------------------------ accessors
 
     public EconomyHook economy() {
-        return economy;
+        return econ;
     }
 
     public SellPrices sellPrices() {
@@ -342,7 +345,7 @@ public final class HavocOrders extends JavaPlugin {
     }
 
     public OrderManager orders() {
-        return orderManager;
+        return orders;
     }
 
     public ItemCatalogue catalogue() {

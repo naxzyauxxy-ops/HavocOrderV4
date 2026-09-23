@@ -1,39 +1,38 @@
 # =====================================================
 #              HavocOrders - menus.yml
 # =====================================================
-# Chest menus. Every layout is here: SIZE, which slots hold content, and a fixed slot
-# for each named control, so paging never moves the buttons around.
+# Menus are drawn as pictures. STRUCTURE is one line per row, one character per slot,
+# and CHARS says what each character means, so you can see the shape of a menu here
+# instead of counting slot numbers.
 #
-# SLOTS are 0-based, left to right, top to bottom. A 54-slot menu is 6 rows of 9.
-# CONTENT-SLOTS defaults to an inset rectangle, leaving a one-slot border.
-# Anything left empty is filled with the FILLER item below.
-# Dialogs replace chest GUIs, so there are no MATERIAL or SLOT keys any more.
-# Each screen has a TITLE, some BODY lines, and BUTTONS with a LABEL and TOOLTIP.
-# TOOLTIP is a list; the lines are joined with newlines in the hover text.
-# Hex colours (&#f40d0d) and legacy codes (&7) both work.
+#   "."  content, the repeating area
+#   "g"  border pane      "#"  filler pane
+#   "<"  previous page    ">"  next page
+#
+# Every other character names a button under ITEMS.
 
-# Display names for the sort and filter cycles.
+LINES:
+  SEPARATOR: "&8&m                                                  "
+
 NAMES:
   SORT:
-    MOST-PAID: "Most Paid"
+    MOST-PAID: "Highest Payout"
     MOST-DELIVERED: "Most Delivered"
-    RECENTLY-LISTED: "Recently Listed"
-    MOST-MONEY-PER-ITEM: "Most Money Per Item"
+    RECENTLY-LISTED: "Recently Created"
+    MOST-MONEY-PER-ITEM: "Best Price/Item"
   FILTER:
-    ALL: "All"
-    BLOCKS: "Blocks"
-    TOOLS: "Tools"
-    FOOD: "Food"
-    COMBAT: "Combat"
-    POTIONS: "Potions"
-    BOOKS: "Books"
-    INGREDIENTS: "Ingredients"
-    UTILITIES: "Utilities"
+    ALL: "All Categories"
+    BLOCKS: "Building Blocks"
+    TOOLS: "Tools & Equipment"
+    FOOD: "Food & Consumables"
+    COMBAT: "Combat & Armor"
+    POTIONS: "Potions & Brews"
+    BOOKS: "Enchanted Books"
+    INGREDIENTS: "Crafting Items"
+    UTILITIES: "Utilities & Misc"
 
-
-# The border item that fills every empty slot.
 FILLER:
-  MATERIAL: "GRAY_STAINED_GLASS_PANE"
+  MATERIAL: GRAY_STAINED_GLASS_PANE
   NAME: " "
 
 MENUS:
@@ -41,578 +40,765 @@ MENUS:
   # ======================| ORDER BOARD |======================
 
   ORDERS:
-    TITLE: "&8ᴏʀᴅᴇʀѕ"
-    SIZE: 54
-    INFO-SLOT: 4
-    INFO-MATERIAL: "PAPER"
-    # 21 slots, matching SETTINGS.ORDERS-PER-PAGE
-    CONTENT-SLOTS: [ 10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34 ]
-    SLOTS:
-      PREVIOUS: 45
-      SORT: 47
-      FILTER: 48
-      SEARCH: 49
-      MY-ORDERS: 50
-      CLOSE: 52
-      NEXT: 53
+    TITLE: "&#FF3B30&lᴏʀᴅᴇʀѕ &8» &7Browse Requests"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g g g g g g g g g"
+      - "< # o f s y # x >"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      FILLER: "#"
+      INFO: "i"
+      BACK: "<"
+      PREVIOUS: "<"
+      NEXT: ">"
+      SORT: "o"
+      FILTER: "f"
+      SEARCH: "s"
+      MY-ORDERS: "y"
+      CLOSE: "x"
     BODY:
-      - "&7{results} orders"
-      - "&8Page {page} of {pages}"
+      - " &7Listings: &f{results}"
+      - " &7Page: &e{page}&7/&e{pages}"
       - ""
-      - "&7Sort: &f{sort}"
-      - "&7Filter: &f{filter}"
-      - "&7Search: &f{query}"
+      - " &7Sort: &f{sort}"
+      - " &7Filter: &f{filter}"
+      - " &7Search: &f{query}"
     EMPTY: "&7Nothing matches those filters."
-    BUTTONS:
+    ITEMS:
+      INFO:
+        MATERIAL: NETHER_STAR
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
+      FILLER:
+        MATERIAL: BLACK_STAINED_GLASS_PANE
+        NAME: " "
       ORDER:
-        LABEL: "&#f40d0d{amount_left}x {material}"
-        TOOLTIP:
-          - "&8{player}'s order"
+        NAME: "&#FF3B30&l{player}'s Order"
+        LORE:
+          - " &7Item Needed: &f{material}"
+          - " &7Reward: &#FFCC00${unit_price} &7/ each"
+          - " &7Progress: &#34C759{current}&7/&#34C759{max}"
+          - " &7Budget: &#FFCC00${paid}&7/&#FFCC00${max_paid}"
+          - " &7You carry: &f{held}"
+          - " &7Time Left: &e{expires}"
           - ""
-          - "&7Pays &a${unit_price} &7each"
-          - "&7Progress: &f{current}&8/&f{max}"
-          - "&7Paid out: &a${paid}"
-          - "&7You are carrying: &f{held}"
-          - ""
-          - "&fClick to deliver"
-          - "&8Expires in {expires}"
+          - "&a▸ Click to deliver items!"
       OWN-ORDER:
-        LABEL: "&e{amount_left}x {material}"
-        TOOLTIP:
-          - "&8Your order"
+        NAME: "&#FFCC00&lYour Order"
+        LORE:
+          - " &7Item Needed: &f{material}"
+          - " &7Reward: &#FFCC00${unit_price} &7/ each"
+          - " &7Progress: &#34C759{current}&7/&#34C759{max}"
+          - " &7Waiting to collect: &f{collectable}"
+          - " &7Time Left: &e{expires}"
           - ""
-          - "&7Progress: &f{current}&8/&f{max}"
-          - "&7Paid out: &a${paid}"
-          - "&7Waiting to collect: &f{collectable}"
-          - ""
-          - "&fClick to manage"
-          - "&8Expires in {expires}"
+          - "&e▸ Click to manage this order"
       PREVIOUS:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dPrevious Page"
-        TOOLTIP: [ "&7Page {previous} of {pages}" ]
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ᴘʀᴇᴠɪᴏᴜѕ ᴘᴀɢᴇ"
+        TOOLTIP:
+          - "&7Back to page &e{previous}&7/&e{pages}"
       NEXT:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dNext Page"
-        TOOLTIP: [ "&7Page {next} of {pages}" ]
+        MATERIAL: LIME_STAINED_GLASS_PANE
+        LABEL: "&#34C759&lɴᴇxᴛ ᴘᴀɢᴇ »"
+        TOOLTIP:
+          - "&7On to page &e{next}&7/&e{pages}"
       SORT:
-        MATERIAL: "COMPARATOR"
-        LABEL: "&#f40d0dSort"
+        MATERIAL: HOPPER
+        LABEL: "&#FF3B30&lѕᴏʀᴛ ʙʏ"
         TOOLTIP:
-          - "&7Currently: &f{sort}"
+          - " &#FF3B30▸ &f{sort}"
           - ""
-          - "&fClick to cycle"
+          - "&e▸ Click to cycle sorting"
       FILTER:
-        MATERIAL: "HOPPER"
-        LABEL: "&#f40d0dFilter"
+        MATERIAL: COMPASS
+        LABEL: "&#FF3B30&lᴄᴀᴛᴇɢᴏʀʏ ꜰɪʟᴛᴇʀ"
         TOOLTIP:
-          - "&7Currently: &f{filter}"
+          - " &#FF3B30▸ &f{filter}"
           - ""
-          - "&fClick to cycle"
+          - "&e▸ Click to cycle categories"
       SEARCH:
-        MATERIAL: "OAK_SIGN"
-        LABEL: "&#f40d0dSearch"
+        MATERIAL: OAK_SIGN
+        LABEL: "&#FF3B30&lѕᴇᴀʀᴄʜ"
         TOOLTIP:
-          - "&7Currently: &f{query}"
+          - "&7Current: &f{query}"
           - ""
-          - "&fClick to search"
+          - "&e▸ Click to search"
           - "&8Or use /orders <text>"
       MY-ORDERS:
-        MATERIAL: "CHEST"
-        LABEL: "&#f40d0dYour Orders"
-        TOOLTIP: [ "&7Manage your orders and loot" ]
+        MATERIAL: CHEST
+        LABEL: "&#FFCC00&lʏᴏᴜʀ ᴏʀᴅᴇʀѕ"
+        TOOLTIP:
+          - "&7View and manage your orders."
       CLOSE:
-        MATERIAL: "BARRIER"
-        LABEL: "&cClose"
+        MATERIAL: BARRIER
+        LABEL: "&#FF3B30&l✖ ᴄʟᴏѕᴇ"
         TOOLTIP: [ ]
 
   # ======================| SEARCH |======================
 
   SEARCH:
-    TITLE: "&8ѕᴇᴀʀᴄʜ"
-    SIZE: 27
-    INFO-SLOT: 4
-    INFO-MATERIAL: "OAK_SIGN"
-    SLOTS:
-      CONFIRM: 11
-      CLEAR: 13
-      BACK: 15
+    TITLE: "&#FF3B30&lѕᴇᴀʀᴄʜ"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . v . # . x . g"
+      - "g g g g g g g g g"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      FILLER: "#"
+      INFO: "i"
+      CONFIRM: "v"
+      CLEAR: "#"
+      BACK: "x"
     BODY:
       - "&7Type what you are looking for."
     INPUT-LABEL: "search"
-    BUTTONS:
+    ITEMS:
+      INFO:
+        MATERIAL: OAK_SIGN
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
       CONFIRM:
-        MATERIAL: "LIME_CONCRETE"
-        LABEL: "&aSearch"
-        TOOLTIP: [ ]
+        MATERIAL: LIME_CONCRETE
+        LABEL: "&#34C759&l✔ ѕᴇᴀʀᴄʜ"
+        TOOLTIP: [ "&7Run the search." ]
       CLEAR:
-        MATERIAL: "RED_DYE"
-        LABEL: "&cClear"
-        TOOLTIP: [ "&7Remove the current search" ]
+        MATERIAL: RED_DYE
+        LABEL: "&#FF3B30&lᴄʟᴇᴀʀ"
+        TOOLTIP: [ "&7Remove the current search." ]
+      INPUT:
+        MATERIAL: OAK_SIGN
+        LABEL: "&#FFCC00&lᴇɴᴛᴇʀ ᴛᴇʀᴍ"
+        TOOLTIP: [ "&7Click, then type in chat." ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ʙᴀᴄᴋ"
         TOOLTIP: [ ]
 
   # ======================| DELIVER |======================
 
   DELIVER:
-    TITLE: "&8ᴅᴇʟɪᴠᴇʀ"
-    SIZE: 45
-    INFO-SLOT: 13
+    TITLE: "&#FF3B30&lᴏʀᴅᴇʀѕ &8» &7Deliver Items"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . d . a . q . g"
+      - "g g g g x g g g g"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      INFO: "i"
+      DELIVER: "d"
+      DELIVER-ALL: "a"
+      INPUT: "q"
+      BACK: "x"
     QUICK-AMOUNTS: [ 64, 576, 1728 ]
-    SLOTS:
-      DELIVER: 29
-      DELIVER-ALL: 31
-      INPUT: 33
-      BACK: 40
     BODY:
-      - "&8{player}'s order"
+      - " &7Order by: &f{player}"
+      - " &7Reward: &#FFCC00${unit_price} &7/ each"
+      - " &7Progress: &#34C759{current}&7/&#34C759{max}"
+      - " &7Still wanted: &f{remaining}"
       - ""
-      - "&7Pays &a${unit_price} &7each"
-      - "&7Progress: &f{current}&8/&f{max}"
-      - "&7Still wanted: &f{remaining}"
+      - " &7In inventory: &f{held_inventory}"
+      - " &7In shulkers: &f{held_shulkers}"
+      - " &7Deliverable now: &#34C759{deliverable}"
+      - " &7Payout: &#FFCC00${payout}"
       - ""
-      - "&7In your inventory: &f{held_inventory}"
-      - "&7In your shulkers: &f{held_shulkers}"
-      - "&7You can deliver: &a{deliverable}"
-      - "&7That pays: &a${payout}"
-      - ""
-      - "&8Expires in {expires}"
+      - " &7Expires in: &e{expires}"
     INPUT-LABEL: "amount"
-    BUTTONS:
+    ITEMS:
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
       DELIVER:
-        MATERIAL: "LIME_CONCRETE"
-        LABEL: "&aDeliver"
+        MATERIAL: LIME_CONCRETE
+        LABEL: "&#34C759&l✔ ᴅᴇʟɪᴠᴇʀ"
         TOOLTIP:
-          - "&7Delivers the amount you set"
-          - "&7Unset delivers &f{deliverable}"
+          - "&7Delivers the amount you set."
+          - "&8Unset delivers &f{deliverable}"
       DELIVER-ALL:
-        MATERIAL: "LIME_CONCRETE"
-        LABEL: "&aDeliver All &7({deliverable})"
+        MATERIAL: GOLD_BLOCK
+        LABEL: "&#FFCC00&lᴅᴇʟɪᴠᴇʀ ᴀʟʟ &7({deliverable})"
         TOOLTIP:
-          - "&7Everything you are carrying,"
-          - "&7including inside shulkers"
-          - "&7Pays &a${payout}"
+          - "&7Everything you carry, including"
+          - "&7inside shulker boxes."
+          - " &7Pays: &#FFCC00${payout}"
       QUICK:
-        MATERIAL: "HOPPER"
-        LABEL: "&#f40d0dDeliver {amount}"
-        TOOLTIP: [ "&7Pays &a${value}" ]
+        MATERIAL: HOPPER
+        LABEL: "&#FFCC00&lᴅᴇʟɪᴠᴇʀ {amount}"
+        TOOLTIP: [ " &7Pays: &#FFCC00${value}" ]
+      INPUT:
+        MATERIAL: OAK_SIGN
+        LABEL: "&#FFCC00&lѕᴇᴛ ᴀᴍᴏᴜɴᴛ"
+        TOOLTIP: [ "&7Click, then type in chat." ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back to Orders"
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ʙᴀᴄᴋ ᴛᴏ ᴏʀᴅᴇʀѕ"
         TOOLTIP: [ ]
 
   # ======================| YOUR ORDERS |======================
 
   MY-ORDERS:
-    TITLE: "&8ʏᴏᴜʀ ᴏʀᴅᴇʀѕ"
-    SIZE: 54
-    INFO-SLOT: 4
-    INFO-MATERIAL: "CHEST"
-    CONTENT-SLOTS: [ 10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34 ]
-    SLOTS:
-      PREVIOUS: 45
-      NEW-ORDER: 47
-      COLLECT: 49
-      ALERTS: 51
-      BACK: 48
-      NEXT: 53
+    TITLE: "&#FF3B30&lᴏʀᴅᴇʀѕ &8» &7Your Active Orders"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g g g g g g g g g"
+      - "< x n c a # # # >"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      FILLER: "#"
+      INFO: "i"
+      PREVIOUS: "<"
+      NEXT: ">"
+      BACK: "x"
+      NEW-ORDER: "n"
+      COLLECT: "c"
+      ALERTS: "a"
     BODY:
-      - "&7{count} active orders"
-      - "&7Escrow held: &a${escrow}"
-      - "&7Waiting to collect: &f{collectable}"
-      - "&8Page {page} of {pages}"
+      - " &7Active orders: &f{count}"
+      - " &7Escrow held: &#FFCC00${escrow}"
+      - " &7Waiting to collect: &#34C759{collectable}"
+      - ""
+      - " &7Page: &e{page}&7/&e{pages}"
     EMPTY: "&7You have no orders yet."
-    BUTTONS:
+    ITEMS:
+      INFO:
+        MATERIAL: CHEST
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
+      FILLER:
+        MATERIAL: BLACK_STAINED_GLASS_PANE
+        NAME: " "
       ORDER:
-        LABEL: "&#f40d0d{amount_left}x {material}"
-        TOOLTIP:
-          - "&7Pays &a${unit_price} &7each"
-          - "&7Progress: &f{current}&8/&f{max}"
-          - "&7Paid out: &a${paid}"
-          - "&7Waiting to collect: &f{collectable}"
+        NAME: "&#FF3B30&l{material}"
+        LORE:
+          - " &7Reward: &#FFCC00${unit_price} &7/ each"
+          - " &7Progress: &#34C759{current}&7/&#34C759{max}"
+          - " &7Payout: &#FFCC00${paid}&7/&#FFCC00${max_paid}"
+          - " &7Waiting: &f{collectable}"
+          - " &7Expires in: &e{expires}"
           - ""
-          - "&fClick to manage"
-          - "&8Expires in {expires}"
+          - "&e▸ Click to manage"
       NEW-ORDER:
-        MATERIAL: "WRITABLE_BOOK"
-        LABEL: "&aNew Order"
-        TOOLTIP: [ "&7Create a buy order" ]
+        MATERIAL: WRITABLE_BOOK
+        LABEL: "&#34C759&l+ ᴄʀᴇᴀᴛᴇ ɴᴇᴡ ᴏʀᴅᴇʀ"
+        TOOLTIP:
+          - "&7Set up a new item request."
       COLLECT:
-        MATERIAL: "ENDER_CHEST"
-        LABEL: "&#f40d0dCollect Loot &7({collectable})"
-        TOOLTIP: [ "&7Collect, drop or sell deliveries" ]
+        MATERIAL: CHEST_MINECART
+        LABEL: "&#FFCC00&lɢᴀᴛʜᴇʀ ɪᴛᴇᴍѕ &7({collectable})"
+        TOOLTIP:
+          - "&7Collect, drop or sell deliveries."
       ALERTS:
-        MATERIAL: "BELL"
-        LABEL: "&#f40d0dAlerts: &f{alerts}"
-        TOOLTIP: [ "&7Chat message when someone delivers" ]
+        MATERIAL: BELL
+        LABEL: "&#FFCC00&lᴀʟᴇʀᴛѕ: &f{alerts}"
+        TOOLTIP:
+          - "&7Chat message when someone delivers."
       PREVIOUS:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dPrevious Page"
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ᴘʀᴇᴠɪᴏᴜѕ ᴘᴀɢᴇ"
         TOOLTIP: [ ]
       NEXT:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dNext Page"
+        MATERIAL: LIME_STAINED_GLASS_PANE
+        LABEL: "&#34C759&lɴᴇxᴛ ᴘᴀɢᴇ »"
         TOOLTIP: [ ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
+        MATERIAL: BARRIER
+        LABEL: "&#FF3B30&l« ʙᴀᴄᴋ"
         TOOLTIP: [ ]
 
   MANAGE-ORDER:
-    TITLE: "&8ᴍᴀɴᴀɢᴇ ᴏʀᴅᴇʀ"
-    SIZE: 45
-    INFO-SLOT: 13
-    SLOTS:
-      COLLECT: 29
-      CANCEL-ORDER: 33
-      BACK: 40
+    TITLE: "&#FF3B30&lᴏʀᴅᴇʀѕ &8» &7Edit Order"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . c . # . k . g"
+      - "g g g g x g g g g"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      FILLER: "#"
+      INFO: "i"
+      COLLECT: "c"
+      CANCEL-ORDER: "k"
+      BACK: "x"
     BODY:
-      - "&7Pays &a${unit_price} &7each"
-      - "&7Progress: &f{current}&8/&f{max}"
-      - "&7Paid out: &a${paid} &8of ${max_paid}"
-      - "&7Waiting to collect: &f{collectable}"
-      - "&7Refund if cancelled: &a${refund}"
+      - " &7Item: &f{material}"
+      - " &7Price: &#FFCC00${unit_price} &7each"
+      - " &7Progress: &#34C759{current}&7/&#34C759{max}"
+      - " &7Payout: &#FFCC00${paid}&7/&#FFCC00${max_paid}"
+      - " &7Waiting to collect: &f{collectable}"
+      - " &7Refund if cancelled: &#34C759${refund}"
       - ""
-      - "&8Expires in {expires}"
-    BUTTONS:
+      - " &7Expires in: &e{expires}"
+    ITEMS:
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
       COLLECT:
-        MATERIAL: "ENDER_CHEST"
-        LABEL: "&#f40d0dCollect"
-        TOOLTIP: [ "&7Open your loot" ]
+        MATERIAL: CHEST_MINECART
+        LABEL: "&#FFCC00&lɢᴀᴛʜᴇʀ ɪᴛᴇᴍѕ"
+        TOOLTIP: [ "&7Collect what has been delivered." ]
       CANCEL-ORDER:
-        MATERIAL: "RED_CONCRETE"
-        LABEL: "&cCancel Order"
-        TOOLTIP: [ "&7Refunds &a${refund}" ]
+        MATERIAL: RED_CONCRETE
+        LABEL: "&#FF3B30&l✖ ᴄᴀɴᴄᴇʟ ᴏʀᴅᴇʀ"
+        TOOLTIP:
+          - "&7Refunds &#34C759${refund}"
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ʙᴀᴄᴋ"
         TOOLTIP: [ ]
 
   CANCEL-CONFIRM:
-    TITLE: "&8ᴄᴀɴᴄᴇʟ ᴏʀᴅᴇʀ?"
-    SIZE: 27
-    INFO-SLOT: 4
-    INFO-MATERIAL: "RED_CONCRETE"
-    SLOTS:
-      CONFIRM: 11
-      BACK: 15
+    TITLE: "&#FF3B30&lᴄᴏɴꜰɪʀᴍ ᴄᴀɴᴄᴇʟʟᴀᴛɪᴏɴ"
+    STRUCTURE:
+      - "g g g g g g g g g"
+      - "g . x . i . v . g"
+      - "g g g g g g g g g"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      INFO: "i"
+      BACK: "x"
+      CONFIRM: "v"
     BODY:
-      - "&fCancel your order for"
-      - "&#f40d0d{max} {material}&f?"
+      - " &7Cancel your order for"
+      - " &#FF3B30{max} {material}&7?"
       - ""
-      - "&7You get &a${refund} &7back."
-    BUTTONS:
+      - " &7You get back: &#34C759${refund}"
+    ITEMS:
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
       CONFIRM:
-        MATERIAL: "LIME_CONCRETE"
-        LABEL: "&aConfirm"
-        TOOLTIP: [ ]
+        MATERIAL: LIME_CONCRETE
+        LABEL: "&#34C759&l✔ ᴄᴏɴꜰɪʀᴍ ᴄᴀɴᴄᴇʟ"
+        TOOLTIP: [ "&7Cancel and return remaining funds." ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Nevermind"
-        TOOLTIP: [ ]
+        MATERIAL: RED_CONCRETE
+        LABEL: "&#FF3B30&l« ɢᴏ ʙᴀᴄᴋ"
+        TOOLTIP: [ "&7Keep the order active." ]
 
   # ======================| NEW ORDER |======================
 
   NEW-ORDER:
-    TITLE: "&8ɴᴇᴡ ᴏʀᴅᴇʀ"
-    SIZE: 45
-    INFO-SLOT: 4
-    INFO-MATERIAL: "WRITABLE_BOOK"
-    SLOTS:
-      CHOOSE-ITEM: 20
-      HELD-ITEM: 21
-      ENCHANTS: 23
-      INPUT: 24
-      CONFIRM: 40
-      BACK: 36
+    TITLE: "&#FF3B30&lᴏʀᴅᴇʀѕ &8» &7New Order"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g s . a . p . e g"
+      - "g g g x g v g g g"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      INFO: "i"
+      CHOOSE-ITEM: "s"
+      HELD-ITEM: "a"
+      INPUT: "p"
+      ENCHANTS: "e"
+      CONFIRM: "v"
+      BACK: "x"
     BODY:
-      - "&7Item: &f{material}"
-      - "&7Amount: &f{amount}"
-      - "&7Price each: &a${price}"
-      - "&7Enchantments: {enchants}"
+      - " &7Item: &f{material}"
+      - " &7Amount: &e{amount}"
+      - " &7Unit Price: &#FFCC00${price}"
+      - " &7Enchantments: {enchants}"
       - ""
-      - "&7Total cost: &a${total}"
-      - "&7Your balance: &a${balance}"
+      - " &7Total Cost: &#FFCC00${total}"
+      - " &7Your Balance: &#34C759${balance}"
       - ""
-      - "&8Amounts accept 1k, 2.5k, 1m"
+      - " &8Amounts accept 1k, 2.5k, 1m"
     AMOUNT-LABEL: "amount"
-    PRICE-LABEL: "price each"
-    BUTTONS:
+    PRICE-LABEL: "unit price"
+    ITEMS:
+      INFO:
+        MATERIAL: WRITABLE_BOOK
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
       CHOOSE-ITEM:
-        MATERIAL: "ITEM_FRAME"
-        LABEL: "&#f40d0dChoose Item"
-        TOOLTIP: [ "&7Currently: &f{material}" ]
-      HELD-ITEM:
-        MATERIAL: "DROPPER"
-        LABEL: "&#f40d0dUse Held Item"
-        TOOLTIP: [ "&7Order whatever is in your hand" ]
-      ENCHANTS:
-        MATERIAL: "ENCHANTING_TABLE"
-        LABEL: "&#f40d0dEnchantments"
+        MATERIAL: ITEM_FRAME
+        LABEL: "&#FFCC00&lѕᴇʟᴇᴄᴛ ɪᴛᴇᴍ"
         TOOLTIP:
-          - "&7Currently: {enchants}"
+          - "&7Current: &f{material}"
           - ""
-          - "&fClick to choose"
+          - "&e▸ Click to browse items"
+      HELD-ITEM:
+        MATERIAL: DROPPER
+        LABEL: "&#FFCC00&lᴜѕᴇ ʜᴇʟᴅ ɪᴛᴇᴍ"
+        TOOLTIP: [ "&7Order whatever is in your hand." ]
+      INPUT:
+        MATERIAL: GOLD_INGOT
+        LABEL: "&#FFCC00&lѕᴇᴛ ᴀᴍᴏᴜɴᴛ / ᴘʀɪᴄᴇ"
+        TOOLTIP: [ "&7Click, then type in chat." ]
+      ENCHANTS:
+        MATERIAL: ENCHANTING_TABLE
+        LABEL: "&#FFCC00&lᴇɴᴄʜᴀɴᴛᴍᴇɴᴛѕ"
+        TOOLTIP:
+          - "&7Current: {enchants}"
+          - ""
+          - "&e▸ Click to choose"
       CONFIRM:
-        MATERIAL: "LIME_CONCRETE"
-        LABEL: "&aPlace Order"
-        TOOLTIP: [ "&7Costs &a${total}" ]
+        MATERIAL: LIME_CONCRETE
+        LABEL: "&#34C759&l✔ ᴄᴏɴꜰɪʀᴍ ᴏʀᴅᴇʀ"
+        TOOLTIP:
+          - " &7Total Cost: &#FFCC00${total}"
+          - "&a▸ Click to create order"
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
-        TOOLTIP: [ ]
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ᴄᴀɴᴄᴇʟ"
+        TOOLTIP: [ "&7Return without saving." ]
 
   ITEM-PICKER:
-    TITLE: "&8ᴄʜᴏᴏѕᴇ ɪᴛᴇᴍ"
-    SIZE: 54
-    INFO-SLOT: 4
-    ITEMS-PER-PAGE: 21
-    CONTENT-SLOTS: [ 10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34 ]
-    SLOTS:
-      PREVIOUS: 45
-      FILTER: 48
-      SEARCH: 49
-      BACK: 50
-      NEXT: 53
+    TITLE: "&#FF3B30&lᴏʀᴅᴇʀѕ &8» &7Select Item"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g g g g g g g g g"
+      - "< # f s x # # # >"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      FILLER: "#"
+      INFO: "i"
+      PREVIOUS: "<"
+      NEXT: ">"
+      FILTER: "f"
+      SEARCH: "s"
+      BACK: "x"
     BODY:
-      - "&7{results} items"
-      - "&8Page {page} of {pages}"
+      - " &7Items: &f{results}"
+      - " &7Page: &e{page}&7/&e{pages}"
       - ""
-      - "&7Filter: &f{filter}"
-      - "&7Search: &f{query}"
+      - " &7Filter: &f{filter}"
+      - " &7Search: &f{query}"
     EMPTY: "&7No items match that search."
-    BUTTONS:
+    ITEMS:
+      INFO:
+        MATERIAL: COMPASS
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
+      FILLER:
+        MATERIAL: BLACK_STAINED_GLASS_PANE
+        NAME: " "
       ITEM:
-        LABEL: "&f{name}"
-        TOOLTIP: [ "&fClick to select" ]
+        NAME: "&#FFCC00&l{name}"
+        LORE: [ "&a▸ Click to select this item" ]
+      FILTER:
+        MATERIAL: COMPASS
+        LABEL: "&#FF3B30&lᴄᴀᴛᴇɢᴏʀʏ ꜰɪʟᴛᴇʀ"
+        TOOLTIP:
+          - " &#FF3B30▸ &f{filter}"
+          - ""
+          - "&e▸ Click to cycle"
+      SEARCH:
+        MATERIAL: OAK_SIGN
+        LABEL: "&#FF3B30&lѕᴇᴀʀᴄʜ"
+        TOOLTIP: [ "&7Current: &f{query}" ]
       PREVIOUS:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dPrevious Page"
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ᴘʀᴇᴠɪᴏᴜѕ ᴘᴀɢᴇ"
         TOOLTIP: [ ]
       NEXT:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dNext Page"
+        MATERIAL: LIME_STAINED_GLASS_PANE
+        LABEL: "&#34C759&lɴᴇxᴛ ᴘᴀɢᴇ »"
         TOOLTIP: [ ]
-      FILTER:
-        MATERIAL: "HOPPER"
-        LABEL: "&#f40d0dFilter: &f{filter}"
-        TOOLTIP: [ "&fClick to cycle" ]
-      SEARCH:
-        MATERIAL: "OAK_SIGN"
-        LABEL: "&#f40d0dSearch"
-        TOOLTIP: [ "&7Currently: &f{query}" ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
+        MATERIAL: BARRIER
+        LABEL: "&#FF3B30&l« ʙᴀᴄᴋ"
         TOOLTIP: [ ]
 
   ENCHANT-PICKER:
-    TITLE: "&8ᴇɴᴄʜᴀɴᴛᴇᴅ ʙᴏᴏᴋѕ"
-    SIZE: 54
-    INFO-SLOT: 4
-    CONTENT-SLOTS: [ 10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34 ]
-    SLOTS:
-      PREVIOUS: 45
-      BACK: 49
-      NEXT: 53
+    TITLE: "&#FF3B30&lѕᴇʟᴇᴄᴛ ᴇɴᴄʜᴀɴᴛᴍᴇɴᴛ"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g g g g g g g g g"
+      - "< # # # x # # # >"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      FILLER: "#"
+      INFO: "i"
+      PREVIOUS: "<"
+      NEXT: ">"
+      BACK: "x"
     BODY:
-      - "&8Page {page} of {pages}"
-    BUTTONS:
+      - " &7Page: &e{page}&7/&e{pages}"
+    ITEMS:
+      INFO:
+        MATERIAL: ENCHANTED_BOOK
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
+      FILLER:
+        MATERIAL: BLACK_STAINED_GLASS_PANE
+        NAME: " "
       ENCHANT:
-        MATERIAL: "ENCHANTED_BOOK"
-        LABEL: "&#f40d0d{enchantment} {level}"
-        TOOLTIP: [ "&fClick to select" ]
+        NAME: "&#FFCC00&l{enchantment} {level}"
+        LORE: [ "&a▸ Click to select this enchantment" ]
       PREVIOUS:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dPrevious Page"
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ᴘʀᴇᴠɪᴏᴜѕ ᴘᴀɢᴇ"
         TOOLTIP: [ ]
       NEXT:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dNext Page"
+        MATERIAL: LIME_STAINED_GLASS_PANE
+        LABEL: "&#34C759&lɴᴇxᴛ ᴘᴀɢᴇ »"
         TOOLTIP: [ ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
+        MATERIAL: BARRIER
+        LABEL: "&#FF3B30&l« ʙᴀᴄᴋ"
         TOOLTIP: [ ]
 
   ENCHANT-EDIT:
-    TITLE: "&8ᴇɴᴄʜᴀɴᴛᴍᴇɴᴛѕ"
-    SIZE: 54
-    INFO-SLOT: 4
-    ITEMS-PER-PAGE: 21
-    CONTENT-SLOTS: [ 10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34 ]
-    SLOTS:
-      PREVIOUS: 45
-      CLEAR: 48
-      BACK: 50
-      NEXT: 53
+    TITLE: "&#FF3B30&lѕᴇʟᴇᴄᴛ ᴇɴᴄʜᴀɴᴛᴍᴇɴᴛѕ"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g g g g g g g g g"
+      - "< # # c x # # # >"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      FILLER: "#"
+      INFO: "i"
+      PREVIOUS: "<"
+      NEXT: ">"
+      CLEAR: "c"
+      BACK: "x"
     BODY:
-      - "&7Item: &f{material}"
-      - "&7Chosen: {applied}"
-      - "&8Page {page} of {pages}"
-    BUTTONS:
+      - " &7Item: &f{material}"
+      - " &7Chosen: {applied}"
+      - ""
+      - " &7Page: &e{page}&7/&e{pages}"
+    ITEMS:
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
+      FILLER:
+        MATERIAL: BLACK_STAINED_GLASS_PANE
+        NAME: " "
       ENCHANT:
-        MATERIAL: "BOOK"
+        MATERIAL: BOOK
         LABEL: "&7{enchantment}"
-        TOOLTIP: [ "&fClick to choose a level" ]
+        TOOLTIP: [ "&e▸ Click to choose a level" ]
       ENCHANT-ACTIVE:
-        MATERIAL: "ENCHANTED_BOOK"
-        LABEL: "&a{enchantment} {level}"
+        MATERIAL: ENCHANTED_BOOK
+        LABEL: "&#34C759&l{enchantment} {level}"
         TOOLTIP:
-          - "&aOn this order"
-          - "&fClick to change or remove"
+          - " &#34C759✔ Currently Selected"
+          - "&7Click to change or remove."
       CLEAR:
-        MATERIAL: "RED_DYE"
-        LABEL: "&cClear All"
-        TOOLTIP: [ "&7Remove every enchantment" ]
+        MATERIAL: RED_DYE
+        LABEL: "&#FF3B30&lᴄʟᴇᴀʀ ᴀʟʟ"
+        TOOLTIP: [ "&7Remove every enchantment." ]
       PREVIOUS:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dPrevious Page"
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ᴘʀᴇᴠɪᴏᴜѕ ᴘᴀɢᴇ"
         TOOLTIP: [ ]
       NEXT:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dNext Page"
+        MATERIAL: LIME_STAINED_GLASS_PANE
+        LABEL: "&#34C759&lɴᴇxᴛ ᴘᴀɢᴇ »"
         TOOLTIP: [ ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
+        MATERIAL: BARRIER
+        LABEL: "&#FF3B30&l« ʙᴀᴄᴋ"
         TOOLTIP: [ ]
 
   ENCHANT-LEVEL:
-    TITLE: "&8ᴄʜᴏᴏѕᴇ ʟᴇᴠᴇʟ"
-    SIZE: 36
-    INFO-SLOT: 4
-    INFO-MATERIAL: "ENCHANTED_BOOK"
-    CONTENT-SLOTS: [ 10,11,12,13,14,15,16 ]
-    SLOTS:
-      REMOVE: 29
-      BACK: 31
+    TITLE: "&#FF3B30&lᴄʜᴏᴏѕᴇ ʟᴇᴠᴇʟ"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . . . . . . . g"
+      - "g g g r g x g g g"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      INFO: "i"
+      REMOVE: "r"
+      BACK: "x"
     BODY:
-      - "&7On: &f{material}"
-      - "&7Currently: &f{current}"
-      - "&8Max level {max}"
-    BUTTONS:
+      - " &7On: &f{material}"
+      - " &7Currently: &e{current}"
+      - " &8Max level {max}"
+    ITEMS:
+      INFO:
+        MATERIAL: ENCHANTED_BOOK
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
       LEVEL:
-        MATERIAL: "ENCHANTED_BOOK"
-        LABEL: "&a{enchantment} {level}"
-        TOOLTIP: [ "&fClick to use this level" ]
+        MATERIAL: ENCHANTED_BOOK
+        LABEL: "&#34C759&l{enchantment} {level}"
+        TOOLTIP: [ "&a▸ Click to use this level" ]
       REMOVE:
-        MATERIAL: "RED_CONCRETE"
-        LABEL: "&cRemove"
-        TOOLTIP: [ "&7Take this enchantment off" ]
+        MATERIAL: RED_CONCRETE
+        LABEL: "&#FF3B30&l✖ ʀᴇᴍᴏᴠᴇ"
+        TOOLTIP: [ "&7Take this enchantment off." ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ʙᴀᴄᴋ"
         TOOLTIP: [ ]
 
   # ======================| COLLECT |======================
 
   COLLECT:
-    TITLE: "&8ᴄᴏʟʟᴇᴄᴛ"
-    SIZE: 54
-    INFO-SLOT: 4
-    CONTENT-SLOTS: [ 10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34 ]
-    SLOTS:
-      PREVIOUS: 45
-      COLLECT-ALL: 47
-      SELL-ALL: 48
-      DROP-PAGE: 50
-      DROP-PAGES: 51
-      DROP-ALL: 52
-      BACK: 46
-      NEXT: 53
+    TITLE: "&#FF3B30&lᴏʀᴅᴇʀѕ &8» &7Collect Deliveries"
+    STRUCTURE:
+      - "g g g g i g g g g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g . . . . . . . g"
+      - "g g g g g g g g g"
+      - "< x c s p m d # >"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      FILLER: "#"
+      INFO: "i"
+      PREVIOUS: "<"
+      NEXT: ">"
+      BACK: "x"
+      COLLECT-ALL: "c"
+      SELL-ALL: "s"
+      DROP-PAGE: "p"
+      DROP-PAGES: "m"
+      DROP-ALL: "d"
     BODY:
-      - "&7{total_items} items waiting"
-      - "&7Sell value: &a${sell_total}"
-      - "&8{unsellable} cannot be sold"
-      - "&8Page {page} of {pages}"
+      - " &7Items waiting: &f{total_items}"
+      - " &7Sell value: &#34C759${sell_total}"
+      - " &8{unsellable} cannot be sold"
+      - ""
+      - " &7Page: &e{page}&7/&e{pages}"
     EMPTY: "&7Nothing waiting for you."
-    BUTTONS:
+    ITEMS:
+      INFO:
+        MATERIAL: CHEST_MINECART
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
+      FILLER:
+        MATERIAL: BLACK_STAINED_GLASS_PANE
+        NAME: " "
       LOOT:
-        LABEL: "&#f40d0d{amount}x {material}"
-        TOOLTIP:
-          - "&7Sell value: &a${value}"
+        NAME: "&#FFCC00&l{amount}x {material}"
+        LORE:
+          - " &7Sell value: &#34C759${value}"
           - ""
-          - "&fClick to collect what fits"
+          - "&a▸ Click to collect what fits"
       COLLECT-ALL:
-        MATERIAL: "ENDER_CHEST"
-        LABEL: "&aCollect All"
-        TOOLTIP: [ "&7Takes everything that fits" ]
+        MATERIAL: CHEST_MINECART
+        LABEL: "&#34C759&lᴄᴏʟʟᴇᴄᴛ ᴀʟʟ"
+        TOOLTIP: [ "&7Takes everything that fits." ]
       SELL-ALL:
-        MATERIAL: "EMERALD"
-        LABEL: "&aSell All &7(${sell_total})"
-        TOOLTIP: [ "&7Sell every sellable item" ]
-      DROP-PAGE:
-        MATERIAL: "HOPPER"
-        LABEL: "&#f40d0dDrop Page"
-        TOOLTIP: [ "&7Drops the {per_page} entries here" ]
-      DROP-PAGES:
-        MATERIAL: "HOPPER"
-        LABEL: "&#f40d0dDrop {pages_batch} Pages"
-        TOOLTIP: [ "&7Drops the next {pages_batch} pages" ]
-      DROP-ALL:
-        MATERIAL: "DROPPER"
-        LABEL: "&cDrop Everything &7({total_items})"
+        MATERIAL: GOLD_BLOCK
+        LABEL: "&#FFCC00&lѕᴇʟʟ ᴀʟʟ &7(${sell_total})"
         TOOLTIP:
-          - "&7Drops it all at your feet"
+          - "&7Instantly liquidate collected items."
+      DROP-PAGE:
+        MATERIAL: HOPPER
+        LABEL: "&#FF3B30&lᴅʀᴏᴘ ᴘᴀɢᴇ"
+        TOOLTIP: [ "&7Drops the {per_page} entries here." ]
+      DROP-PAGES:
+        MATERIAL: HOPPER
+        LABEL: "&#FF3B30&lᴅʀᴏᴘ {pages_batch} ᴘᴀɢᴇѕ"
+        TOOLTIP: [ "&7Drops the next {pages_batch} pages." ]
+      DROP-ALL:
+        MATERIAL: DROPPER
+        LABEL: "&#FF3B30&lᴅʀᴏᴘ ᴀʟʟ ʟᴏᴏᴛ &7({total_items})"
+        TOOLTIP:
+          - "&7Drops everything at your feet."
           - "&cAnyone nearby can pick it up."
       PREVIOUS:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dPrevious Page"
+        MATERIAL: RED_STAINED_GLASS_PANE
+        LABEL: "&#FF3B30&l« ᴘʀᴇᴠɪᴏᴜѕ ᴘᴀɢᴇ"
         TOOLTIP: [ ]
       NEXT:
-        MATERIAL: "ARROW"
-        LABEL: "&#f40d0dNext Page"
+        MATERIAL: LIME_STAINED_GLASS_PANE
+        LABEL: "&#34C759&lɴᴇxᴛ ᴘᴀɢᴇ »"
         TOOLTIP: [ ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
+        MATERIAL: BARRIER
+        LABEL: "&#FF3B30&l« ʙᴀᴄᴋ"
         TOOLTIP: [ ]
 
   SELL-CONFIRM:
-    TITLE: "&8ѕᴇʟʟ ᴇᴠᴇʀʏᴛʜɪɴɢ?"
-    SIZE: 27
-    INFO-SLOT: 4
-    INFO-MATERIAL: "EMERALD"
-    SLOTS:
-      CONFIRM: 11
-      BACK: 15
+    TITLE: "&#FF3B30&lᴏʀᴅᴇʀѕ &8» &7Confirm Sale"
+    STRUCTURE:
+      - "g g g g g g g g g"
+      - "g . x . i . v . g"
+      - "g g g g g g g g g"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      INFO: "i"
+      BACK: "x"
+      CONFIRM: "v"
     BODY:
-      - "&fSell &#f40d0d{amount} &fitems"
-      - "&ffor &a${total}&f?"
+      - " &7Selling: &#FFCC00{amount} &7items"
+      - " &7Payout: &#34C759${total}"
       - ""
-      - "&8{unsellable} items have no sell price"
-    BUTTONS:
+      - " &8{unsellable} items have no sell price"
+    ITEMS:
+      INFO:
+        MATERIAL: GOLD_BLOCK
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
       CONFIRM:
-        MATERIAL: "LIME_CONCRETE"
-        LABEL: "&aSell"
-        TOOLTIP: [ ]
+        MATERIAL: LIME_CONCRETE
+        LABEL: "&#34C759&l✔ ᴄᴏɴꜰɪʀᴍ ѕᴀʟᴇ"
+        TOOLTIP: [ "&7Complete the transaction for &#FFCC00${total}" ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
-        TOOLTIP: [ ]
+        MATERIAL: RED_CONCRETE
+        LABEL: "&#FF3B30&l« ᴀʙᴏʀᴛ"
+        TOOLTIP: [ "&7Return without selling." ]
 
   DROP-CONFIRM:
-    TITLE: "&8ᴅʀᴏᴘ ᴇᴠᴇʀʏᴛʜɪɴɢ?"
-    SIZE: 27
-    INFO-SLOT: 4
-    INFO-MATERIAL: "DROPPER"
-    SLOTS:
-      CONFIRM: 11
-      BACK: 15
+    TITLE: "&#FF3B30&lᴅʀᴏᴘ ᴇᴠᴇʀʏᴛʜɪɴɢ?"
+    STRUCTURE:
+      - "g g g g g g g g g"
+      - "g . x . i . v . g"
+      - "g g g g g g g g g"
+    CHARS:
+      CONTENT: "."
+      BORDER: "g"
+      INFO: "i"
+      BACK: "x"
+      CONFIRM: "v"
     BODY:
-      - "&fDrop &#f40d0d{amount} &fitems"
-      - "&fon the ground?"
+      - " &7Drop &#FF3B30{amount} &7items"
+      - " &7on the ground?"
       - ""
-      - "&cThey are not protected."
-    BUTTONS:
+      - " &cThey are not protected."
+    ITEMS:
+      INFO:
+        MATERIAL: DROPPER
+      BORDER:
+        MATERIAL: GRAY_STAINED_GLASS_PANE
+        NAME: " "
       CONFIRM:
-        MATERIAL: "LIME_CONCRETE"
-        LABEL: "&cDrop"
+        MATERIAL: LIME_CONCRETE
+        LABEL: "&#FF3B30&l✔ ᴅʀᴏᴘ ɪᴛ ᴀʟʟ"
         TOOLTIP: [ ]
       BACK:
-        MATERIAL: "ARROW"
-        LABEL: "&7Back"
+        MATERIAL: RED_CONCRETE
+        LABEL: "&#FF3B30&l« ᴀʙᴏʀᴛ"
         TOOLTIP: [ ]

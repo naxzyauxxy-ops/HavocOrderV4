@@ -60,7 +60,7 @@ public class EnchantPickerScreen extends Screen {
             Map<String, String> placeholders = new HashMap<>(screen);
             placeholders.put("enchantment", entry.enchantmentName());
             placeholders.put("level", entry.levelLabel());
-            buttons.add(configButton("ENCHANT", placeholders, responses -> {
+            buttons.add(configButton("ENCHANT", placeholders, entry.book().clone(), responses -> {
                 session.setDraftItem(entry.book());
                 success();
                 new NewOrderScreen(plugin, player).show();

@@ -76,7 +76,7 @@ public class ItemPickerScreen extends Screen {
         for (ItemCatalogue.Entry entry : slice(results, session.getItemPage(), perPage())) {
             Map<String, String> placeholders = new HashMap<>(screen);
             placeholders.put("name", entry.name());
-            buttons.add(configButton("ITEM", placeholders, responses -> {
+            buttons.add(configButton("ITEM", placeholders, entry.stack().clone(), responses -> {
                 if (entry.stack().getType() == Material.ENCHANTED_BOOK) {
                     click();
                     new EnchantPickerScreen(plugin, player).show();

@@ -188,4 +188,10 @@ public class DeliverScreen extends Screen {
             show();
         }
     }
+
+    @Override
+    public org.bukkit.inventory.ItemStack bodyIcon() {
+        Order order = order();
+        return order == null ? null : order.getItemCopy(1);
+    }
 }

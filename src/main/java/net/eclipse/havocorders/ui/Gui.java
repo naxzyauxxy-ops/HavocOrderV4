@@ -78,13 +78,23 @@ public class Gui {
         ScreenModel.Button exit = screen.exitButton();
         if (exit != null) buttons.add(exit);
 
-        List<Integer> contentSlots = contentSlots(layout, size);
+        Layout plan = Layout.read(layout, size);
+        List<Integer> contentSlots = plan.content().isEmpty()
+                ? contentSlots(layout, size)
+                : plan.content();
         Set<Integer> used = new LinkedHashSet<>();
+
+        // Decoration from the pattern goes down first; real buttons overwrite it.
+        for (Map.Entry<Integer, String> entry : plan.decoration().entrySet()) {
+            ItemStack pane = decoration(layout, entry.getValue());
+            if (pane != null) inventory.setItem(entry.getKey(), pane);
+        }
 
         // Controls first: they have reserved slots, so paging never shifts them around.
         List<ScreenModel.Button> content = new ArrayList<>();
         for (ScreenModel.Button button : buttons) {
-            int slot = slotFor(layout, button.key(), size);
+            Integer patterned = plan.slots().get(button.key());
+            int slot = patterned != null ? patterned : slotFor(layout, button.key(), size);
             if (slot < 0) {
                 content.add(button);
                 continue;
@@ -100,7 +110,7 @@ public class Gui {
             place(inventory, view, contentSlots.get(index++), button);
         }
 
-        renderInfo(screen, layout, inventory, view, size);
+        renderInfo(screen, layout, inventory, view, size, plan);
         fill(layout, inventory);
 
         screen.viewer().openInventory(inventory);
@@ -123,11 +133,13 @@ public class Gui {
 
     /** The body text lives on an information item rather than being lost. */
     private void renderInfo(Screen screen, ConfigurationSection layout, Inventory inventory,
-                            View view, int size) {
+                            View view, int size, Layout plan) {
         List<String> body = screen.bodyLines();
         if (body.isEmpty() && screen.bodyIcon() == null) return;
 
-        int slot = layout == null ? -1 : layout.getInt("INFO-SLOT", -1);
+        Integer patterned = plan.slots().get("INFO");
+        int slot = patterned != null ? patterned
+                : (layout == null ? -1 : layout.getInt("INFO-SLOT", -1));
         if (slot < 0 || slot >= size || view.buttonAt(slot) != null) return;
 
         Material material = Material.matchMaterial(
@@ -175,9 +187,33 @@ public class Gui {
     // ------------------------------------------------------------------ layout config
 
     private int size(ConfigurationSection layout) {
+        // A pattern decides its own height: one row of nine per line.
+        if (layout != null) {
+            List<String> structure = layout.getStringList("STRUCTURE");
+            if (!structure.isEmpty()) {
+                return Math.max(9, Math.min(54, structure.size() * 9));
+            }
+        }
         int size = layout == null ? 54 : layout.getInt("SIZE", 54);
         if (size % 9 != 0 || size < 9 || size > 54) size = 54;
         return size;
+    }
+
+    /** Border and filler panes named by the pattern. */
+    private ItemStack decoration(ConfigurationSection layout, String role) {
+        ConfigurationSection items = layout == null ? null : layout.getConfigurationSection("ITEMS");
+        ConfigurationSection entry = items == null ? null : items.getConfigurationSection(role);
+
+        String material = entry == null
+                ? plugin.menuString("FILLER.MATERIAL", "GRAY_STAINED_GLASS_PANE")
+                : entry.getString("MATERIAL", "GRAY_STAINED_GLASS_PANE");
+        Material parsed = Material.matchMaterial(material);
+        if (parsed == null || parsed == Material.AIR) return null;
+
+        return ItemBuilder.of(parsed)
+                .name(entry == null ? " " : entry.getString("NAME", " "))
+                .lore(entry == null ? List.of() : entry.getStringList("LORE"))
+                .build();
     }
 
     private int slotFor(ConfigurationSection layout, String key, int size) {

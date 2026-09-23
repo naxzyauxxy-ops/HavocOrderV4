@@ -148,4 +148,9 @@ public class NewOrderScreen extends Screen {
 
         return buttons;
     }
+
+    @Override
+    public org.bukkit.inventory.ItemStack bodyIcon() {
+        return session.getDraftItem() == null ? null : session.getDraftItem().clone();
+    }
 }

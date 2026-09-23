@@ -82,6 +82,12 @@ public abstract class Screen {
     protected ConfigurationSection button(String key) {
         ConfigurationSection section = section();
         if (section == null) return null;
+
+        // Pattern menus keep their button definitions under ITEMS; older ones use BUTTONS.
+        ConfigurationSection items = section.getConfigurationSection("ITEMS");
+        if (items != null && items.isConfigurationSection(key)) {
+            return items.getConfigurationSection(key);
+        }
         ConfigurationSection buttons = section.getConfigurationSection("BUTTONS");
         return buttons == null ? null : buttons.getConfigurationSection(key);
     }
@@ -137,13 +143,44 @@ public abstract class Screen {
         ConfigurationSection section = button(key);
         String label = section == null ? key : section.getString("LABEL", key);
         List<String> tooltip = section == null ? List.of() : section.getStringList("TOOLTIP");
-        Material fallback = section == null ? null
-                : Material.matchMaterial(section.getString("MATERIAL", "PAPER"));
+        Material configured = section == null ? null
+                : Material.matchMaterial(section.getString("MATERIAL", ""));
+        Material fallback = configured != null ? configured : defaultIcon(key);
 
         return ScreenModel.Button.of(key,
                 style().text(Text.apply(label, common(placeholders))),
                 style().text(Text.applyPruned(tooltip, common(placeholders))),
-                icon, fallback == null ? Material.PAPER : fallback, action);
+                icon, fallback, action);
+    }
+
+    /**
+     * Icon used when a button has no MATERIAL in config and carries no item of its own.
+     * Paper for everything looks like a bug, so each control gets something that reads
+     * as what it does.
+     */
+    private Material defaultIcon(String key) {
+        return switch (key) {
+            case "PREVIOUS", "NEXT", "BACK" -> Material.ARROW;
+            case "CLOSE" -> Material.BARRIER;
+            case "SORT" -> Material.COMPARATOR;
+            case "FILTER" -> Material.HOPPER;
+            case "SEARCH", "INPUT" -> Material.OAK_SIGN;
+            case "CONFIRM", "DELIVER", "DELIVER-ALL" -> Material.LIME_CONCRETE;
+            case "CANCEL-ORDER", "CANCEL-LISTING", "REMOVE", "CLEAR" -> Material.RED_CONCRETE;
+            case "COLLECT", "COLLECT-ALL", "MY-ORDERS", "MY-LISTINGS" -> Material.CHEST;
+            case "SELL", "SELL-ALL" -> Material.EMERALD;
+            case "DROP-PAGE", "DROP-PAGES" -> Material.HOPPER;
+            case "DROP-ALL" -> Material.DROPPER;
+            case "ALERTS" -> Material.BELL;
+            case "FAST-BUY" -> Material.SUGAR;
+            case "ENCHANTS", "ENCHANT", "LEVEL" -> Material.ENCHANTED_BOOK;
+            case "NEW-ORDER", "TRANSACTIONS" -> Material.WRITABLE_BOOK;
+            case "CHOOSE-ITEM" -> Material.ITEM_FRAME;
+            case "HELD-ITEM" -> Material.DROPPER;
+            case "PREVIEW" -> Material.SPYGLASS;
+            case "VIEW-MAP" -> Material.FILLED_MAP;
+            default -> Material.PAPER;
+        };
     }
 
     /** A button with no action: closes the screen. */

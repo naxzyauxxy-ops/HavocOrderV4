@@ -114,7 +114,9 @@ public class CollectScreen extends Screen {
             placeholders.put("amount", NumberUtil.count(waiting));
             placeholders.put("value", NumberUtil.money(
                     plugin.sellPrices().totalPrice(order.getItem(), waiting)));
-            buttons.add(configButton("LOOT", placeholders, responses -> {
+            buttons.add(configButton("LOOT", placeholders,
+                    order.getItemCopy(Math.min(waiting, order.getItem().getMaxStackSize())),
+                    responses -> {
                 // Takes whatever fits; the rest stays on the order for next time.
                 int collected = plugin.orders().collect(player, order, order.getCollectable());
                 if (collected > 0) success();

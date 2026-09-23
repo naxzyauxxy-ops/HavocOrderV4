@@ -74,4 +74,10 @@ public class ManageOrderScreen extends Screen {
 
         return buttons;
     }
+
+    @Override
+    public org.bukkit.inventory.ItemStack bodyIcon() {
+        Order order = order();
+        return order == null ? null : order.getItemCopy(1);
+    }
 }
